@@ -1,0 +1,25 @@
+1  given a node when it starts up then it should be a follower
+2  given a node is a follower when it recieves a vote notice then it should vote
+3  given a node is a follower when it recieves a second vote notice then it should not vote
+4  given a node is a follower when it recieves a heartbeat notice then it should update its election timeout
+5  given a node is a follower when it hasn't recieved a heartbeat in its election timeout then it starts an election and turns to a candidate, incrementing its term count
+6  given a node is a candidate when it hasn't been elected then it votes for itself and asks others for a vote
+7  given a node is a candidate when it hasn't been elected and it recieves a notice that there is another leader with a higher term count then it reverts to a follower 
+8  given a node is a candidate when a designated time passes then it times out and reverts to a follower 
+9  given a node is a candidate when it recieves majority vote then it becomes a leader
+10 given a node is a candidate when it receives a appendEntries from the old leader and the term in the request is as large as teh current term, then it continues to append and is follower
+11 given a node is a follower when it recieves an instruction followed by a vote then the instruction executes first
+12 given a node is a follower when it recieves an instruction that would overwrite an old instruction then it ignores the request
+13 given a node is a follower when it receives an instruction from a node claiming to be leader but has a lower termcount  then it ignores the request
+14 given a node is a leader when it recieves an ammend entry from anohter leader with a higher term count then it converts to a follower
+15 given a node is a follower and it has a larger log length than the leader when it recieves an ammend entry from a leader then it returns false
+16 given a node is a leader and sends out an ammend entry when the response is returned and is false then resend the ammend entry back a level
+17 given a node is a leader and sends out an ammend entry when the majority respond true then commit the log to true
+
+considerations
+leaders should never overwrite or delete logs
+thread safe
+random election timeouts
+if client contacts follower, redirect to leader
+majority always is needed for anything but converting to follower and candidate
+
