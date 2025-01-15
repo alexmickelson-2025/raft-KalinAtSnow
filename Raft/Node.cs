@@ -17,10 +17,22 @@ public class Node
     public int VotedId { get; private set; }
     public int? LeaderId { get; private set; }
     public NodeState State { get; set; } = NodeState.FOLLOWER;
+    public int Term = 0;
 
     public void LeaderCheck()
     {
-        var _majority = Math.Ceiling((double) nodes.Count / 2);
+
+        foreach (Node node in nodes)
+        {
+            if (node._id == LeaderId && node.Term >= Term)
+            {
+                State = NodeState.FOLLOWER;
+                return;
+            }
+        }
+
+
+        var _majority = Math.Ceiling((double)nodes.Count / 2);
 
         int votes = 1;
         foreach (Node node in nodes)
@@ -31,18 +43,21 @@ public class Node
             }
         }
 
-        if (votes >= _majority) {
+        if (votes >= _majority)
+        {
             State = NodeState.LEADER;
             LeaderId = _id;
             AppendEntries();
-        }     
+        }
+
     }
 
     public void BecomeCandidate()
     {
         State = NodeState.CANDIDATE;
         VotedId = _id;
-        foreach (Node node in nodes) {
+        foreach (Node node in nodes)
+        {
             AskForVote(_id);
         }
     }
@@ -54,7 +69,15 @@ public class Node
 
     public void StartElection()
     {
-        BecomeCandidate();
+        Term++;
+        bool ValidForPromotion = true;
+        foreach (Node node in nodes)
+        {
+            if (node.Term > Term)
+                ValidForPromotion = false;
+        }
+        if (ValidForPromotion)
+            BecomeCandidate();
     }
 
     public void AppendEntries()
@@ -62,6 +85,7 @@ public class Node
         foreach (Node node in nodes)
         {
             node.LeaderId = _id;
+            node.Term = Term;
         }
     }
 }

@@ -5,7 +5,7 @@
 [ ] 5. When the election time is reset, it is a random value between 150 and 300ms.
 [ ]        between
 [ ]        random: call n times and make sure that there are some that are different (other properties of the distribution if you like)
-[ ] 6. When a new election begins, the term is incremented by 1.
+[x] 6. When a new election begins, the term is incremented by 1.
 [ ]        Create a new node, store id in variable.
 [ ]        wait 300 ms
 [ ]        reread term (?)
@@ -15,8 +15,8 @@
 [ ] 9. Given a candidate receives a majority of votes while waiting for unresponsive node, it still becomes a leader.
 [ ] 10. A follower that has not voted and is in an earlier term responds to a RequestForVoteRPC with yes. (the reply will be a separate RPC)
 [x] 11. Given a candidate server that just became a candidate, it votes for itself.
-[ ] 12. Given a candidate, when it receives an AppendEntries message from a node with a later term, then candidate loses and becomes a follower.
-[ ] 13. Given a candidate, when it receives an AppendEntries message from a node with an equal term, then candidate loses and becomes a follower.
+[x] 12. Given a candidate, when it receives an AppendEntries message from a node with a later term, then candidate loses and becomes a follower.
+[x] 13. Given a candidate, when it receives an AppendEntries message from a node with an equal term, then candidate loses and becomes a follower.
 [ ] 14. If a node receives a second request for vote for the same term, it should respond no. (again, separate RPC for response)
 [ ] 15. If a node receives a second request for vote for a future term, it should vote for that node.
 [ ] 16. Given a candidate, when an election timer expires inside of an election, a new election is started.
