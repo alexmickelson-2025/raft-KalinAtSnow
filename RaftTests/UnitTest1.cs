@@ -225,4 +225,51 @@ public class UnitTest1
         Assert.Equal(NodeState.FOLLOWER, n1.State);
         Assert.Equal(1, n1.Term);
     }
+
+    //test 9
+    [Fact]
+    public void unresponsiveNodeDoesNotCancelVoteIfThereIsMajority()
+    {
+        Node n = new();
+        Node n1 = new(1);
+        Node n2 = new(2);
+
+        n2.State = NodeState.CANDIDATE;
+        n.VotedId = 2;
+        //n1 presumed unresponsive
+
+        n2.LeaderCheck();
+        Assert.Equal(NodeState.LEADER, n2.State);
+    }
+
+    //test 10
+    [Fact]
+    public void followerHasNotVoted_isBehindATerm_WhenAskedForVote_RespondsToHighestTermCandidate()
+    {
+        //Term 1
+        Node n = new();
+        n.StartElection();
+        n.LeaderCheck();
+
+        Node n1 = new(1);
+        n.nodes.Add(n1);
+        n1.nodes.Add(n);
+
+        n.AppendEntries();
+
+        //Term 2
+        n1.StartElection();
+        n1.LeaderCheck();
+
+        //restarts or comes online late - defaults 0 term
+        Node n2 = new(2);
+        n.nodes.Add(n2);
+        n1.nodes.Add(n2);
+        n2.nodes = [n, n1];
+
+        //asks for vote internally
+        n.StartElection();
+
+        Assert.Equal(0, n2.VotedId);
+    }
 }

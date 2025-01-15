@@ -14,7 +14,7 @@ public class Node
 
     public List<Node> nodes = new List<Node>();
     private int _id;
-    public int VotedId { get; private set; }
+    public int VotedId { get; set; }
     public int? LeaderId { get; private set; }
     public NodeState State { get; set; } = NodeState.FOLLOWER;
     public int Term = 0;
@@ -37,7 +37,7 @@ public class Node
         int votes = 1;
         foreach (Node node in nodes)
         {
-            if (node.VotedId == votes)
+            if (node.VotedId == _id)
             {
                 votes++;
             }
@@ -58,7 +58,7 @@ public class Node
         VotedId = _id;
         foreach (Node node in nodes)
         {
-            AskForVote(_id);
+            node.AskForVote(_id);
         }
     }
 
@@ -88,5 +88,6 @@ public class Node
             node.Term = Term;
         }
     }
+
 }
 

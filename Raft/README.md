@@ -12,8 +12,8 @@
 [ ]        assert after is greater (by at least 1)
 [ ] 7. When a follower does get an AppendEntries message, it resets the election timer. (i.e. it doesn't start an election even after more than 300ms)
 [x] 8. Given an election begins, when the candidate gets a majority of votes, it becomes a leader. (think of the easy case; can use two tests for single and multi-node clusters)
-[ ] 9. Given a candidate receives a majority of votes while waiting for unresponsive node, it still becomes a leader.
-[ ] 10. A follower that has not voted and is in an earlier term responds to a RequestForVoteRPC with yes. (the reply will be a separate RPC)
+[x] 9. Given a candidate receives a majority of votes while waiting for unresponsive node, it still becomes a leader.
+[x] 10. A follower that has not voted and is in an earlier term responds to a RequestForVoteRPC with yes. (the reply will be a separate RPC)
 [x] 11. Given a candidate server that just became a candidate, it votes for itself.
 [x] 12. Given a candidate, when it receives an AppendEntries message from a node with a later term, then candidate loses and becomes a follower.
 [x] 13. Given a candidate, when it receives an AppendEntries message from a node with an equal term, then candidate loses and becomes a follower.
