@@ -1,6 +1,6 @@
 ﻿namespace Raft;
 
-public class Node
+public class Node : INode
 {
     public Node()
     {
@@ -13,7 +13,7 @@ public class Node
     }
 
     public List<Node> nodes = new List<Node>();
-    private int _id;
+    public int _id;
     public int VotedId { get; set; }
     public int? LeaderId { get; private set; }
     public NodeState State { get; set; } = NodeState.FOLLOWER;
