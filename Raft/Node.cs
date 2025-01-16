@@ -12,14 +12,17 @@ public class Node : INode
         _id = id;
     }
 
+    private Random _random = new Random();
     public List<Node> nodes = new List<Node>();
     public int _id;
-    public int VotedId { get; set; }
-    public int? LeaderId { get; private set; }
+    public int VotedId { get; set; } = -1;
+    public int VotedTerm { get; set; } = -1;
+    public int LeaderId { get; private set; } = -1;
     public NodeState State { get; set; } = NodeState.FOLLOWER;
     public int Term = 0;
+    public int ElectionTimeout = 0;
 
-    public void LeaderCheck()
+    public async Task LeaderCheck()
     {
 
         foreach (Node node in nodes)
@@ -37,6 +40,11 @@ public class Node : INode
         int votes = 1;
         foreach (Node node in nodes)
         {
+            if (node.VotedTerm >= Term)
+            {
+                break;
+            }
+
             if (node.VotedId == _id)
             {
                 votes++;
@@ -47,27 +55,39 @@ public class Node : INode
         {
             State = NodeState.LEADER;
             LeaderId = _id;
-            AppendEntries();
+            await AppendEntries();
         }
 
     }
 
-    public void BecomeCandidate()
+    public async Task BecomeCandidate()
     {
         State = NodeState.CANDIDATE;
         VotedId = _id;
         foreach (Node node in nodes)
         {
-            node.AskForVote(_id);
+            await node.AskForVote(_id, Term);
         }
     }
 
-    private void AskForVote(int id)
+    public async Task RespondVote(int id, int term)
     {
-        VotedId = id;
+        if (term > VotedTerm)
+        {
+            VotedId = id;
+            VotedTerm = term;
+        }
     }
 
-    public void StartElection()
+    private async Task AskForVote(int id, int term)
+    {
+        foreach (Node node in nodes)
+        {
+             await node.RespondVote(id, term);
+        }
+    }
+
+    public async Task StartElection()
     {
         Term++;
         bool ValidForPromotion = true;
@@ -77,10 +97,10 @@ public class Node : INode
                 ValidForPromotion = false;
         }
         if (ValidForPromotion)
-            BecomeCandidate();
+            await BecomeCandidate();
     }
 
-    public void AppendEntries()
+    public async Task AppendEntries()
     {
         foreach (Node node in nodes)
         {
@@ -89,5 +109,9 @@ public class Node : INode
         }
     }
 
+    public async Task RefreshTimer()
+    {
+        ElectionTimeout = _random.Next(150, 300);
+    }
 }
 

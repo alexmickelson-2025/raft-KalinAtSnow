@@ -13,27 +13,27 @@ public class UnitTest1
 
     //test 11
     [Fact]
-    public void givenNodeTurnsToCandidate_VotesForItself()
+    public async Task givenNodeTurnsToCandidate_VotesForItself()
     {
         Node n = new();
-        n.BecomeCandidate();
+        await n.BecomeCandidate();
         Assert.Equal(0, n.VotedId);
     }
 
     //test 8 single
     [Fact]
-    public void givenOneNodeElection_TurnLeaderWithOneVote()
+    public async Task givenOneNodeElection_TurnLeaderWithOneVote()
     {
         Node n = new();
-        n.StartElection();
+        await n.StartElection();
         Assert.Equal(NodeState.CANDIDATE, n.State);
-        n.LeaderCheck();
+        await n.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n.State);
     }
 
     //test 8 multi
     [Fact]
-    public void givenThreeNodeElection_TurnLeaderWithThreeVotes()
+    public async Task givenThreeNodeElection_TurnLeaderWithThreeVotes()
     {
         Node n = new();
         Node n1 = new();
@@ -43,16 +43,16 @@ public class UnitTest1
         n1.nodes = [n, n2];
         n2.nodes = [n, n2];
 
-        n.StartElection();
+        await n.StartElection();
         Assert.Equal(NodeState.CANDIDATE, n.State);
 
-        n.LeaderCheck();
+        await n.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n.State);
     }
 
     //test 19
     [Fact]
-    public void turnToLeader_SendHeartbeat()
+    public async Task turnToLeader_SendHeartbeat()
     {
         Node n = new(0);
         Node n1 = new(1);
@@ -62,12 +62,12 @@ public class UnitTest1
         n1.nodes = [n, n2];
         n2.nodes = [n, n1];
 
-        Assert.Null(n.LeaderId);
-        Assert.Null(n1.LeaderId);
-        Assert.Null(n2.LeaderId);
+        Assert.Equal(-1, n.LeaderId);
+        Assert.Equal(-1, n1.LeaderId);
+        Assert.Equal(-1, n2.LeaderId);
 
-        n2.StartElection();
-        n2.LeaderCheck();
+        await n2.StartElection();
+        await n2.LeaderCheck();
 
         Assert.Equal(2, n.LeaderId);
         Assert.Equal(2, n1.LeaderId);
@@ -77,7 +77,7 @@ public class UnitTest1
     //test 2
     //this test itself might have flaws - by my understanding, we don't want any old appendentry to mark as leader only leaders should be able to. how its phrased in the 19 it sounds like any can send
     [Fact]
-    public void givenAppendEntryRecieved_UnderstandTheSenderAsLeader()
+    public async Task givenAppendEntryRecieved_UnderstandTheSenderAsLeader()
     {
         Node n = new(0);
         Node n1 = new(1);
@@ -85,15 +85,15 @@ public class UnitTest1
         n.nodes = [n1];
         n1.nodes = [n];
 
-        Assert.Null(n.LeaderId);
-        Assert.Null(n1.LeaderId);
+        Assert.Equal(-1, n.LeaderId);
+        Assert.Equal(-1, n1.LeaderId);
 
-        n1.AppendEntries();
+        await n1.AppendEntries();
 
         Assert.Equal(1, n.LeaderId);
-        Assert.Null(n1.LeaderId);
+        Assert.Equal(-1, n1.LeaderId);
 
-        n.AppendEntries();
+        await n.AppendEntries();
 
         Assert.Equal(1, n.LeaderId);
         Assert.Equal(0, n1.LeaderId);
@@ -102,23 +102,23 @@ public class UnitTest1
 
     //test 6
     [Fact]
-    public void termsIncrementWhenNewCandidacy()
+    public async Task termsIncrementWhenNewCandidacy()
     {
         Node n = new();
 
         Assert.Equal(0, n.Term);
 
-        n.StartElection();
+        await n.StartElection();
 
         Assert.Equal(1, n.Term);
     }
 
     [Fact]
-    public void termValueAreTakenFromLeaderWhenNewNodeComesOnline()
+    public async Task termValueAreTakenFromLeaderWhenNewNodeComesOnline()
     {
         Node n = new();
-        n.StartElection();
-        n.LeaderCheck();
+        await n.StartElection();
+        await n.LeaderCheck();
 
         Assert.Equal(1, n.Term);
 
@@ -129,18 +129,18 @@ public class UnitTest1
         n1.nodes.Add(n);
 
         //heartbeat to show leader to new node
-        n.AppendEntries();
+        await n.AppendEntries();
         Assert.Equal(1, n1.Term);
     }
 
     //test 12
     [Fact]
-    public void candidateStartsElectionWtihHigherTermLeaderPresent_RevertsToFollower()
+    public async Task candidateStartsElectionWtihHigherTermLeaderPresent_RevertsToFollower()
     {
         //Term 1
         Node n = new();
-        n.StartElection();
-        n.LeaderCheck();
+        await n.StartElection();
+        await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
@@ -149,8 +149,8 @@ public class UnitTest1
         n.AppendEntries();
 
         //Term 2
-        n1.StartElection();
-        n1.LeaderCheck();
+        await n1.StartElection();
+        await n1.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n1.State);
         Assert.Equal(2, n1.Term);
 
@@ -161,7 +161,7 @@ public class UnitTest1
         n2.nodes = [n, n1];
 
         //election gives it Term 1 (less than current) before the heartbeat to bring it to speed occurs - shouldn't go through and reverts
-        n2.StartElection();
+        await n2.StartElection();
         Assert.Equal(1, n2.Term);
         Assert.Equal(NodeState.FOLLOWER, n2.State);
         Assert.Equal(NodeState.LEADER, n1.State);
@@ -169,22 +169,22 @@ public class UnitTest1
 
     //test 12
     [Fact]
-    public void candidateGetsAppendEntryFromHigherTermLeader_RevertsToFollower()
+    public async Task candidateGetsAppendEntryFromHigherTermLeader_RevertsToFollower()
     {
         //Term 1
         Node n = new();
-        n.StartElection();
-        n.LeaderCheck();
+        await n.StartElection();
+        await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        n.AppendEntries();
+        await n.AppendEntries();
 
         //Term 2
-        n1.StartElection();
-        n1.LeaderCheck();
+        await n1.StartElection();
+        await n1.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n1.State);
         Assert.Equal(2, n1.Term);
 
@@ -195,8 +195,8 @@ public class UnitTest1
         n2.nodes = [n, n1];
 
         //election gives it Term 1 (less than current) heartbeat occurs - shouldn't go through and reverts with current term (2)
-        n2.StartElection();
-        n1.AppendEntries();
+        await n2.StartElection();
+        await n1.AppendEntries();
         Assert.Equal(2, n2.Term);
         Assert.Equal(NodeState.FOLLOWER, n2.State);
         Assert.Equal(NodeState.LEADER, n1.State);
@@ -204,22 +204,22 @@ public class UnitTest1
 
     //test 13
     [Fact]
-    public void candidateGetsAppendEntryFromHigherTermLeader_revertsToFollower()
+    public async Task candidateGetsAppendEntryFromHigherTermLeader_revertsToFollower()
     {
         Node n = new();
-        n.StartElection();
-        n.LeaderCheck();
+        await n.StartElection();
+        await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
         //start election followed by heartbeat (election gets term of new node to 1)
-        n1.StartElection();
-        n.AppendEntries();
+        await n1.StartElection();
+        await n.AppendEntries();
         
         //check to see if old election passed
-        n1.LeaderCheck();
+        await n1.LeaderCheck();
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(NodeState.FOLLOWER, n1.State);
@@ -228,7 +228,7 @@ public class UnitTest1
 
     //test 9
     [Fact]
-    public void unresponsiveNodeDoesNotCancelVoteIfThereIsMajority()
+    public async Task unresponsiveNodeDoesNotCancelVoteIfThereIsMajority()
     {
         Node n = new();
         Node n1 = new(1);
@@ -238,28 +238,28 @@ public class UnitTest1
         n.VotedId = 2;
         //n1 presumed unresponsive
 
-        n2.LeaderCheck();
+        await n2.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n2.State);
     }
 
     //test 10
     [Fact]
-    public void followerHasNotVoted_isBehindATerm_WhenAskedForVote_RespondsToHighestTermCandidate()
+    public async Task followerHasNotVoted_isBehindATerm_WhenAskedForVote_RespondsToHighestTermCandidate()
     {
         //Term 1
         Node n = new();
-        n.StartElection();
-        n.LeaderCheck();
+        await n.StartElection();
+        await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        n.AppendEntries();
+        await n.AppendEntries();
 
         //Term 2
-        n1.StartElection();
-        n1.LeaderCheck();
+        await n1.StartElection();
+        await n1.LeaderCheck();
 
         //restarts or comes online late - defaults 0 term
         Node n2 = new(2);
@@ -267,9 +267,46 @@ public class UnitTest1
         n1.nodes.Add(n2);
         n2.nodes = [n, n1];
 
-        //asks for vote internally
-        n.StartElection();
+        await n.StartElection();
 
         Assert.Equal(0, n2.VotedId);
+    }
+
+    //test 5
+    [Fact]
+    public async Task RandomValuesForElectionTimeouts()
+    {
+        Node n = new();
+
+        for (int i = 0; i < 10; i++)
+        {
+            await n.RefreshTimer();
+            int oldValue = n.ElectionTimeout;
+            await n.RefreshTimer();
+            Assert.NotEqual(oldValue, n.ElectionTimeout);
+        }
+    }
+
+    //test 14
+    [Fact]
+    public async Task VotingForTheSameTermShouldReturnFalse()
+    {
+        Node n = new();
+        Node n1 = new(1);
+        Node n2 = new(2);
+
+        n1.nodes = [n, n2];
+        n2.nodes = [n, n1];
+        n.nodes = [n1, n2];
+
+        await n.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(1, n2.VotedTerm);
+
+        await n1.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(1, n2.VotedTerm);
     }
 }
