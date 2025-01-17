@@ -309,4 +309,68 @@ public class UnitTest1
         Assert.Equal(n._id, n2.VotedId);
         Assert.Equal(1, n2.VotedTerm);
     }
+
+    //test 15
+    [Fact]
+    public async Task GivenNodeRecievesVotesForFutureElectionAtTimeOfYounger_VotesForTheOldest()
+    {
+        Node n = new();
+        Node n1 = new(1);
+        Node n2 = new(2);
+
+        n1.nodes = [n, n2];
+        n2.nodes = [n, n1];
+        n.nodes = [n1, n2];
+
+        //term 1
+        await n.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(1, n2.VotedTerm);
+
+        //term 1
+        await n1.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(1, n2.VotedTerm);
+
+        //term 2
+        await n.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(2, n2.VotedTerm);
+    }
+
+    //test 15 possible edge?
+    [Fact]
+    public async Task GivenNodeRecievesVotesForFutureElectionAtTimeOfYounger_VotesForTheOldest_TwoHappenBeforeTheYounger()
+    {
+        Node n = new();
+        Node n1 = new(1);
+        Node n2 = new(2);
+
+        n1.nodes = [n, n2];
+        n2.nodes = [n, n1];
+        n.nodes = [n1, n2];
+
+        //term 1
+        await n.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(1, n2.VotedTerm);
+
+        //term 2
+        await n.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(2, n2.VotedTerm);
+ 
+        //term 1, should be white noise
+        await n1.StartElection();
+
+        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(2, n2.VotedTerm);
+    }
+
+
 }
