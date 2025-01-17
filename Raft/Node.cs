@@ -1,4 +1,7 @@
-﻿namespace Raft;
+﻿using System.Diagnostics;
+using System.Transactions;
+
+namespace Raft;
 
 public class Node : INode
 {
@@ -10,6 +13,8 @@ public class Node : INode
     public Node(int id)
     {
         _id = id;
+        _random = new Random();
+        ElectionTimeout = _random.Next(151, 300);
     }
 
     private Random _random = new Random();
@@ -21,6 +26,25 @@ public class Node : INode
     public NodeState State { get; set; } = NodeState.FOLLOWER;
     public int Term = 0;
     public int ElectionTimeout = 0;
+    public bool running = true;
+
+    public Thread Start()
+    {
+        Thread t = new(async ()=>
+        {
+        while (running)
+        {
+            ElectionTimeout -= 10;
+            Thread.Sleep(10);
+            if (ElectionTimeout <= 0) { 
+                await StartElection();
+                await RefreshTimer();
+            }
+        }
+        });
+        t.Start();
+        return t;
+    }
 
     public async Task LeaderCheck()
     {
@@ -104,6 +128,7 @@ public class Node : INode
     {
         foreach (Node node in nodes)
         {
+            await RefreshTimer();
             await node.AppendEntryResponse(_id, Term);
         }
     }

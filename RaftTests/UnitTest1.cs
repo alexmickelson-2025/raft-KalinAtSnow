@@ -142,7 +142,7 @@ public class UnitTest1
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        n.AppendEntries();
+        await n.AppendEntries();
 
         //Term 2
         await n1.StartElection();
@@ -406,5 +406,34 @@ public class UnitTest1
         await n.AppendEntries();
 
         await n1.Received().AppendEntryResponse(0, 0);
+    }
+
+    //test 7
+    [Fact]
+    public async Task ElectionTimerResetsWhenAppendEntryCalled()
+    {
+        Node n = new();
+        var n1 = Substitute.For<Node>();
+
+        n.nodes.Add(n1);
+
+        await n.AppendEntries();
+
+        await n1.Received().RefreshTimer();
+    }
+
+    //test 4
+    [Fact]
+    public void FollowerDoesNotGetCommunicationFor300ms_StartsElection()
+    {
+        Node n = new();
+        Thread t = n.Start();
+
+        Thread.Sleep(300);
+
+        n.running = false;
+        t.Join();
+
+        Assert.True(n.Term >= 1);
     }
 }
