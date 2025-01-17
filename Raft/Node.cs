@@ -36,12 +36,23 @@ public class Node : INode
         {
             ElectionTimeout -= 10;
             Thread.Sleep(10);
-            if (ElectionTimeout <= 0) { 
-                await StartElection();
-                await RefreshTimer();
-            }
+                if (ElectionTimeout <= 0)
+                {
+                    await StartElection();
+                    await RefreshTimer();
+                    if (State == NodeState.CANDIDATE)
+                    {
+                        await StartElection();
+                    }
+                }
+                if (State == NodeState.LEADER)
+                {
+                    await AppendEntries();
+                }
+                
         }
         });
+        
         t.Start();
         return t;
     }

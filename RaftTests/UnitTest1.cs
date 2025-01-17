@@ -1,4 +1,5 @@
 using NSubstitute;
+using NSubstitute.ReceivedExtensions;
 using Raft;
 namespace RaftTests;
 
@@ -435,5 +436,43 @@ public class UnitTest1
         t.Join();
 
         Assert.True(n.Term >= 1);
+    }
+
+
+    //test 1
+    [Fact]
+    public async Task LeadersSendAppendEntriesEvery10ms()
+    {
+        Node n = new();
+        await n.StartElection();
+        await n.LeaderCheck();
+        Thread t = n.Start();
+
+        var n1 = Substitute.For<Node>();
+        n1.nodes.Add(n);
+        n.nodes.Add(n1);
+
+        Thread.Sleep(25);
+
+        n.running = false;
+        t.Join();
+
+        await n1.Received(2).AppendEntries();
+    }
+
+    [Fact]
+    public async Task CandidatesStartNewElectionWhenTimerRunsOut()
+    {
+        Node n = new();
+        await n.StartElection();
+
+        Thread t = n.Start();
+
+        Thread.Sleep(301);
+
+        n.running = false;
+        t.Join();
+
+        Assert.True(n.Term > 1);
     }
 }
