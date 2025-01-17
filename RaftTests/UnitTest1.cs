@@ -1,3 +1,4 @@
+using NSubstitute;
 using Raft;
 namespace RaftTests;
 
@@ -75,9 +76,8 @@ public class UnitTest1
     }
 
     //test 2
-    //this test itself might have flaws - by my understanding, we don't want any old appendentry to mark as leader only leaders should be able to. how its phrased in the 19 it sounds like any can send
     [Fact]
-    public async Task givenAppendEntryRecieved_UnderstandTheSenderAsLeader()
+    public async Task givenAppendEntryRecieved_UnderstandTheSenderAsLeaderIfTermIsHigher()
     {
         Node n = new(0);
         Node n1 = new(1);
@@ -88,15 +88,11 @@ public class UnitTest1
         Assert.Equal(-1, n.LeaderId);
         Assert.Equal(-1, n1.LeaderId);
 
+        await n1.StartElection();
         await n1.AppendEntries();
 
         Assert.Equal(1, n.LeaderId);
         Assert.Equal(-1, n1.LeaderId);
-
-        await n.AppendEntries();
-
-        Assert.Equal(1, n.LeaderId);
-        Assert.Equal(0, n1.LeaderId);
     }
 
 
@@ -206,16 +202,22 @@ public class UnitTest1
     [Fact]
     public async Task candidateGetsAppendEntryFromHigherTermLeader_revertsToFollower()
     {
+        //Term 1
         Node n = new();
         await n.StartElection();
         await n.LeaderCheck();
+        
+        //force it to be higher
+        n.Term = 2;
 
         Node n1 = new(1);
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        //start election followed by heartbeat (election gets term of new node to 1)
+        //Election for n1 term 1
         await n1.StartElection();
+
+        //Heartbeat from n at term 2
         await n.AppendEntries();
         
         //check to see if old election passed
@@ -223,7 +225,7 @@ public class UnitTest1
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(NodeState.FOLLOWER, n1.State);
-        Assert.Equal(1, n1.Term);
+        Assert.Equal(2, n1.Term);
     }
 
     //test 9
@@ -372,5 +374,37 @@ public class UnitTest1
         Assert.Equal(2, n2.VotedTerm);
     }
 
+    //test 18
+    [Fact]
+    public async Task givenCandidateRecievesAppendEntryFromPreviousTerm_RejectAndContinueWithCandidacy()
+    {
+        Node n = new();
+        await n.StartElection();
 
+        Node n1 = new(1);
+        n.nodes.Add(n1);
+        n1.nodes.Add(n);
+
+        n1.State = NodeState.LEADER;
+        await n1.AppendEntries();
+
+        //current term that its applying for
+        Assert.Equal(1, n.Term);
+        //n doesn't know about a leader with the manual set
+        Assert.Equal(-1, n.LeaderId);
+    }
+
+    //test 17
+    [Fact]
+    public async Task GetAResponseFromAppendEntry()
+    {
+        Node n = new();
+        var n1 = Substitute.For<Node>();
+
+        n.nodes.Add(n1);
+        
+        await n.AppendEntries();
+
+        await n1.Received().AppendEntryResponse(0, 0);
+    }
 }

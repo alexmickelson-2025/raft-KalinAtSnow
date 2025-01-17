@@ -104,9 +104,18 @@ public class Node : INode
     {
         foreach (Node node in nodes)
         {
-            node.LeaderId = _id;
-            node.Term = Term;
+            await node.AppendEntryResponse(_id, Term);
         }
+    }
+
+    public async Task AppendEntryResponse(int id, int term)
+    {
+        if (term > Term)
+        {
+            LeaderId = id;
+            Term = term;
+        }
+        
     }
 
     public async Task RefreshTimer()
