@@ -18,7 +18,7 @@ public class Node : INode
     }
 
     private Random _random = new Random();
-    public List<Node> nodes = new List<Node>();
+    public List<INode> nodes = new List<INode>();
     public int _id;
     public int VotedId { get; set; } = -1;
     public int VotedTerm { get; set; } = -1;
@@ -30,12 +30,12 @@ public class Node : INode
 
     public Thread Start()
     {
-        Thread t = new(async ()=>
+        Thread t = new(async () =>
         {
-        while (running)
-        {
-            ElectionTimeout -= 10;
-            Thread.Sleep(10);
+            while (running)
+            {
+                ElectionTimeout -= 10;
+                Thread.Sleep(10);
                 if (ElectionTimeout <= 0)
                 {
                     await StartElection();
@@ -49,10 +49,10 @@ public class Node : INode
                 {
                     await AppendEntries();
                 }
-                
-        }
+
+            }
         });
-        
+
         t.Start();
         return t;
     }
@@ -118,7 +118,7 @@ public class Node : INode
     {
         foreach (Node node in nodes)
         {
-             await node.RespondVote(id, term);
+            await node.RespondVote(id, term);
         }
     }
 
@@ -151,7 +151,7 @@ public class Node : INode
             LeaderId = id;
             Term = term;
         }
-        
+
     }
 
     public async Task RefreshTimer()
