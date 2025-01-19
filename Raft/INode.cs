@@ -7,8 +7,17 @@ namespace Raft
         NodeState State { get; set; }
         int VotedId { get; set; }
         int VotedTerm { get; set; }
+        int Term { get; set; }
+        int ElectionTimeout { get; set; }
+        bool running { get; set; }
+        int _id { get; set; }
+        int electionMultiplier { get; set; }
+        int networkDelay { get; set; }
+
+
 
         Task AppendEntries();
+        Task AskForVote(int id, int term);
         Task AppendEntryResponse(int id, int term);
         Task BecomeCandidate();
         Task LeaderCheck();

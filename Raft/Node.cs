@@ -14,19 +14,21 @@ public class Node : INode
     {
         _id = id;
         _random = new Random();
-        ElectionTimeout = _random.Next(151, 300);
+        ElectionTimeout = _random.Next(151, 300) * electionMultiplier;
     }
 
     private Random _random = new Random();
     public List<INode> nodes = new List<INode>();
-    public int _id;
+    public int _id { get; set; }
     public int VotedId { get; set; } = -1;
     public int VotedTerm { get; set; } = -1;
     public int LeaderId { get; private set; } = -1;
     public NodeState State { get; set; } = NodeState.FOLLOWER;
-    public int Term = 0;
-    public int ElectionTimeout = 0;
-    public bool running = true;
+    public int Term { get; set; } = 0;
+    public int ElectionTimeout { get; set; } = 0;
+    public bool running { get; set; } = true;
+    public int electionMultiplier { get; set; } = 1;
+    public int networkDelay { get; set; } = 0;
 
     public Thread Start()
     {
@@ -34,11 +36,18 @@ public class Node : INode
         {
             while (running)
             {
+                if (LeaderId != _id)
+                {
+                    State = NodeState.FOLLOWER;
+                }
                 ElectionTimeout -= 10;
                 Thread.Sleep(10);
                 if (ElectionTimeout <= 0)
                 {
-                    await StartElection();
+                    if (State != NodeState.LEADER)
+                    {
+                        await StartElection();
+                    }
                     await RefreshTimer();
                     if (State == NodeState.CANDIDATE)
                     {
@@ -60,7 +69,7 @@ public class Node : INode
     public async Task LeaderCheck()
     {
 
-        foreach (Node node in nodes)
+        foreach (INode node in nodes)
         {
             if (node._id == LeaderId && node.Term >= Term)
             {
@@ -73,7 +82,7 @@ public class Node : INode
         var _majority = Math.Ceiling((double)nodes.Count / 2);
 
         int votes = 1;
-        foreach (Node node in nodes)
+        foreach (INode node in nodes)
         {
             if (node.VotedTerm >= Term)
             {
@@ -92,21 +101,22 @@ public class Node : INode
             LeaderId = _id;
             await AppendEntries();
         }
-
     }
 
     public async Task BecomeCandidate()
     {
         State = NodeState.CANDIDATE;
         VotedId = _id;
-        foreach (Node node in nodes)
+        foreach (INode node in nodes)
         {
             await node.AskForVote(_id, Term);
         }
+        await LeaderCheck();
     }
 
     public async Task RespondVote(int id, int term)
     {
+        Thread.Sleep(networkDelay);
         if (term > VotedTerm)
         {
             VotedId = id;
@@ -114,9 +124,9 @@ public class Node : INode
         }
     }
 
-    private async Task AskForVote(int id, int term)
+    public async Task AskForVote(int id, int term)
     {
-        foreach (Node node in nodes)
+        foreach (INode node in nodes)
         {
             await node.RespondVote(id, term);
         }
@@ -126,7 +136,7 @@ public class Node : INode
     {
         Term++;
         bool ValidForPromotion = true;
-        foreach (Node node in nodes)
+        foreach (INode node in nodes)
         {
             if (node.Term > Term)
                 ValidForPromotion = false;
@@ -137,15 +147,16 @@ public class Node : INode
 
     public async Task AppendEntries()
     {
-        foreach (Node node in nodes)
+        foreach (INode node in nodes)
         {
-            await RefreshTimer();
+            await node.RefreshTimer();
             await node.AppendEntryResponse(_id, Term);
         }
     }
 
     public async Task AppendEntryResponse(int id, int term)
     {
+        Thread.Sleep(networkDelay);
         if (term > Term)
         {
             LeaderId = id;
@@ -156,7 +167,7 @@ public class Node : INode
 
     public async Task RefreshTimer()
     {
-        ElectionTimeout = _random.Next(150, 300);
+        ElectionTimeout = _random.Next(150, 300) * electionMultiplier;
     }
 }
 

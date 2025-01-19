@@ -19,8 +19,15 @@ public class VisualizationNode : INode
     public NodeState State { get => ((INode)innerNode).State; set => ((INode)innerNode).State = value; }
     public int VotedId { get => ((INode)innerNode).VotedId; set => ((INode)innerNode).VotedId = value; }
     public int VotedTerm { get => ((INode)innerNode).VotedTerm; set => ((INode)innerNode).VotedTerm = value; }
+    public int Term { get => ((INode)innerNode).Term; set => ((INode)innerNode).Term = value; }
+    public int ElectionTimeout { get => ((INode)innerNode).ElectionTimeout; set => ((INode)innerNode).ElectionTimeout = value; }
+    public bool running { get => ((INode)innerNode).running; set => ((INode)innerNode).running = value; }
+    public int electionMultiplier { get => ((INode)innerNode).electionMultiplier; set => ((INode)innerNode).electionMultiplier = value; }
+    public int networkDelay { get => ((INode)innerNode).networkDelay; set => ((INode)innerNode).networkDelay = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
+
+    int INode._id { get => ((INode)innerNode)._id; set => ((INode)innerNode)._id = value; }
 
     public void AppendEntries()
     {
@@ -30,6 +37,11 @@ public class VisualizationNode : INode
     public Task AppendEntryResponse(int id, int term)
     {
         return ((INode)innerNode).AppendEntryResponse(id, term);
+    }
+
+    public Task AskForVote(int id, int term)
+    {
+        return ((INode)innerNode).AskForVote(id, term);
     }
 
     public void BecomeCandidate()
