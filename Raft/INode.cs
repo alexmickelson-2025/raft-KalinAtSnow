@@ -12,9 +12,8 @@ namespace Raft
         bool running { get; set; }
         int _id { get; set; }
         int electionMultiplier { get; set; }
-        int networkDelay { get; set; }
-
-
+         int networkRespondDelay { get; set; }
+         int networkSendDelay { get; set; }
 
         Task AppendEntries();
         Task AskForVote(int id, int term);

@@ -28,7 +28,8 @@ public class Node : INode
     public int ElectionTimeout { get; set; } = 0;
     public bool running { get; set; } = true;
     public int electionMultiplier { get; set; } = 1;
-    public int networkDelay { get; set; } = 0;
+    public int networkSendDelay { get; set; } = 0;
+    public int networkRespondDelay { get; set; } = 0;
 
     public Thread Start()
     {
@@ -116,7 +117,7 @@ public class Node : INode
 
     public async Task RespondVote(int id, int term)
     {
-        Thread.Sleep(networkDelay);
+        Thread.Sleep(networkRespondDelay);
         if (term > VotedTerm)
         {
             VotedId = id;
@@ -126,6 +127,7 @@ public class Node : INode
 
     public async Task AskForVote(int id, int term)
     {
+        Thread.Sleep(networkSendDelay);
         foreach (INode node in nodes)
         {
             await node.RespondVote(id, term);
@@ -147,6 +149,7 @@ public class Node : INode
 
     public async Task AppendEntries()
     {
+        Thread.Sleep(networkSendDelay);
         foreach (INode node in nodes)
         {
             await node.RefreshTimer();
@@ -156,7 +159,7 @@ public class Node : INode
 
     public async Task AppendEntryResponse(int id, int term)
     {
-        Thread.Sleep(networkDelay);
+        Thread.Sleep(networkRespondDelay);
         if (term > Term)
         {
             LeaderId = id;

@@ -23,7 +23,8 @@ public class VisualizationNode : INode
     public int ElectionTimeout { get => ((INode)innerNode).ElectionTimeout; set => ((INode)innerNode).ElectionTimeout = value; }
     public bool running { get => ((INode)innerNode).running; set => ((INode)innerNode).running = value; }
     public int electionMultiplier { get => ((INode)innerNode).electionMultiplier; set => ((INode)innerNode).electionMultiplier = value; }
-    public int networkDelay { get => ((INode)innerNode).networkDelay; set => ((INode)innerNode).networkDelay = value; }
+    public int networkRespondDelay { get => ((INode)innerNode).networkRespondDelay; set => ((INode)innerNode).networkRespondDelay = value; }
+    public int networkSendDelay { get => ((INode)innerNode).networkSendDelay; set => ((INode)innerNode).networkSendDelay = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 

@@ -8,36 +8,31 @@
 
 <button class="btn btn-primary" @onclick="StartSimulation">Start Simulation</button>
 <div>
-
 <label>
-    multiplier for how long the election timeout is
-    <input type="number" @onchange="ElectionTimerUpdated"/>
+    multiplier for how long the election timeout is: @electionMultiplier
+        <input type="range" min="1" max="15" @onchange="ElectionTimerUpdated" />
 </label>
 </div>
 
 <div>
-
 <label>
-    simulated network delay
-    <input type="number" @bind="networkDelay" />
-    <select>
-        @foreach (var node in visualizationNodes)
-        {
-            <option>@node.innerNode._id</option>
-        }
-    </select>
-    <button class="btn btn-primary" @onclick="() => NetworkDelayUpdated(networkDelay)">Send Delay</button>
+    simulated send network delay: @networkSendDelay
+        <input type="range" min="10" max="10000" @onchange="NetworkSendDelayUpdated" />
 </label>
 </div>
 
-
-Welcome to your new app.
+<div>
+    <label>
+        simulated respond network delay: @networkRespondDelay
+        <input type="range" min="10" max="10000" @onchange="NetworkRespondDelayUpdated" />
+    </label>
+</div>
 
 <div class="row">
     @foreach (var node in visualizationNodes)
     {
         var timeoutRemaining = node.innerNode.ElectionTimeout;
-        var maxIntervalMilliseconds = 300.0;
+        var maxIntervalMilliseconds = 300.0 * electionMultiplier;
         var percentageRemaining = (int)(100 * (Math.Abs(timeoutRemaining) / maxIntervalMilliseconds));
 
         <div class="p-3 col-4">
@@ -75,24 +70,33 @@ Welcome to your new app.
     bool isRunning;
     List<VisualizationNode>? visualizationNodes = [];
     int electionMultiplier = 1;
-    int networkDelay = 0;
+    int networkSendDelay = 0;
+    int networkRespondDelay;
 
     public void ElectionTimerUpdated(ChangeEventArgs e)
     {
+        electionMultiplier = Convert.ToInt32(e.Value);
         foreach (INode node in visualizationNodes)
         {
-            node.electionMultiplier = Convert.ToInt32(e.Value);
+            node.electionMultiplier = electionMultiplier;
         }
     }
 
-    public void NetworkDelayUpdated(int id)
+    public void NetworkSendDelayUpdated(ChangeEventArgs e)
     {
+        networkSendDelay = Convert.ToInt32(e.Value);
         foreach (INode node in visualizationNodes)
         {
-            if (node._id == id)
-            {
-                node.networkDelay = networkDelay;
-            }
+            node.networkSendDelay = networkSendDelay;
+        }
+    }
+
+    public void NetworkRespondDelayUpdated(ChangeEventArgs e)
+    {
+        networkRespondDelay = Convert.ToInt32(e.Value);
+        foreach (INode node in visualizationNodes)
+        {
+            node.networkRespondDelay = networkRespondDelay;
         }
     }
 
