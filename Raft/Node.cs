@@ -102,6 +102,7 @@ public class Node : INode
         {
             State = NodeState.LEADER;
             LeaderId = _id;
+            //init nextIndex of others to mine + 1
             await AppendEntries();
         }
     }
@@ -157,6 +158,8 @@ public class Node : INode
         {
             await node.RefreshTimer();
             await node.AppendEntryResponse(_id, Term);
+
+            node.Log.Add(nextValue-1, Log[nextValue-1]);
         }
     }
 

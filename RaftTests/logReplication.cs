@@ -7,14 +7,19 @@ public class logReplication
 {
     //when a leader receives a client command the leader sends the log entry in the next appendentries RPC to all nodes
     [Fact]
-    public void CommandToLeader_SendsLogEntryToFollowers_AtRPC()
+    public async Task CommandToLeader_SendsLogEntryToFollowers_AtRPC()
     {
         Node n = new Node();
-        var n1 = Substitute.For<Node>();
+        Node n1 = new Node();
+
+        n.nodes.Add(n1);
         
         n.State = NodeState.LEADER;
+        n.Command(5);
 
+        await n.AppendEntries();
 
+        Assert.Equal(5, n1.Log[0]);
     }
 
     //when a leader receives a command from the client, it is appended to its log
@@ -26,8 +31,8 @@ public class logReplication
 
         n.Command(1);
 
-        Assert.True(n.Log.First().Key == 0);
-        Assert.True(n.Log.First().Value == 1);
+        Assert.Equal(0, n.nextValue-1);
+        Assert.Equal(1, n.Log[0]);
     }
 
     [Fact]
@@ -51,8 +56,25 @@ public class logReplication
         Assert.Empty(n.Log);
     }
 
-
     //when a leader wins an election, it initializes the nextIndex for each follower to the index just after the last one it its log
+    [Fact]
+    public async Task UponSuccessfulElection_LeaderInitializesNextIndexForEachFollower_IndexOneHigher()
+    {
+        Node n = new Node();
+        Node n1 = new Node();
+        Node n2 = new Node();
+    
+        n.nodes = [n1, n2];
+        n1.nodes = [n, n2];
+        n2.nodes = [n1, n];
+
+        n.nextValue = 3;
+
+        await n.StartElection();
+
+        Assert.Equal(4, n1.nextValue);
+        Assert.Equal(4, n2.nextValue);
+    }
     //leaders maintain an "nextIndex" for each follower that is the index of the next log entry the leader will send to that follower
     //Highest committed index from the leader is included in AppendEntries RPC's
     //When a follower learns that a log entry is committed, it applies the entry to its local state machine
