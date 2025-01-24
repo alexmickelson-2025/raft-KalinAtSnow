@@ -25,6 +25,8 @@ public class VisualizationNode : INode
     public int electionMultiplier { get => ((INode)innerNode).electionMultiplier; set => ((INode)innerNode).electionMultiplier = value; }
     public int networkRespondDelay { get => ((INode)innerNode).networkRespondDelay; set => ((INode)innerNode).networkRespondDelay = value; }
     public int networkSendDelay { get => ((INode)innerNode).networkSendDelay; set => ((INode)innerNode).networkSendDelay = value; }
+    public Dictionary<int, int> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
+    public int nextValue { get => ((INode)innerNode).nextValue; set => ((INode)innerNode).nextValue = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
@@ -48,6 +50,11 @@ public class VisualizationNode : INode
     public void BecomeCandidate()
     {
         ((INode)innerNode).BecomeCandidate();
+    }
+
+    public void Command(int setValue)
+    {
+       ((INode)innerNode).Command(setValue);
     }
 
     public void LeaderCheck()

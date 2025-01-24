@@ -30,6 +30,8 @@ public class Node : INode
     public int electionMultiplier { get; set; } = 1;
     public int networkSendDelay { get; set; } = 0;
     public int networkRespondDelay { get; set; } = 0;
+    public Dictionary<int, int> Log { get; set; } = new Dictionary<int, int>();
+    public int nextValue { get; set; } = 0;
 
     public Thread Start()
     {
@@ -123,6 +125,7 @@ public class Node : INode
             VotedId = id;
             VotedTerm = term;
         }
+        await Task.CompletedTask;
     }
 
     public async Task AskForVote(int id, int term)
@@ -165,12 +168,22 @@ public class Node : INode
             LeaderId = id;
             Term = term;
         }
-
+        await Task.CompletedTask;
     }
 
     public async Task RefreshTimer()
     {
         ElectionTimeout = _random.Next(150, 300) * electionMultiplier;
+        await Task.CompletedTask;
+    }
+
+    public void Command(int setValue)
+    {
+        if (State == NodeState.LEADER)
+        {
+            Log.Add(nextValue, setValue);
+            nextValue++;
+        } 
     }
 }
 

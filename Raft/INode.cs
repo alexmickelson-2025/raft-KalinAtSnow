@@ -14,6 +14,8 @@ namespace Raft
         int electionMultiplier { get; set; }
          int networkRespondDelay { get; set; }
          int networkSendDelay { get; set; }
+        Dictionary<int, int> Log {  get; set; }
+        int nextValue { get; set; }
 
         Task AppendEntries();
         Task AskForVote(int id, int term);
@@ -22,6 +24,7 @@ namespace Raft
         Task LeaderCheck();
         Task RefreshTimer();
         Task RespondVote(int id, int term);
+        void Command(int setValue);
         Thread Start();
         Task StartElection();
     }

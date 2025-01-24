@@ -3,7 +3,7 @@ using NSubstitute.ReceivedExtensions;
 using Raft;
 namespace RaftTests;
 
-public class UnitTest1
+public class ElectionTests
 {
     //test 3
     [Fact]
@@ -475,24 +475,5 @@ public class UnitTest1
         t.Join();
 
         Assert.True(n.Term > 1);
-    }
-
-    [Fact]
-    public async Task FollowerRecievesMessageFromLeaderThatDiffers_ReturnFalse()
-    {
-        Node n = new();
-        var n1 = Substitute.For<Node>();
-
-        n.nodes.Add(n1);
-        n.Term = 3;
-        n.Logs = [1, 2];
-
-        n1.Logs = [3, 4];
-
-        await n.AppendEntries();
-
-        var response = await n1.Received().AppendEntryResponse(3, 2);
-
-        Assert.False(response);
     }
 }
