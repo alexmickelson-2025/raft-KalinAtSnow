@@ -180,9 +180,9 @@ public class Node : INode
         foreach (INode node in nodes)
         {
             await node.RefreshTimer();
+            node.Log = Log;
             await node.AppendEntryResponse(_id, Term, CommittedIndex);
 
-            node.Log = Log;
         }
     }
 
@@ -190,8 +190,8 @@ public class Node : INode
     {
         if (State == NodeState.LEADER)
         {
-            StateMachine.Add(Log[nextValue-1]);
             CommittedIndex++;
+            StateMachine.Add(Log[nextValue-1]);
         }
     }
 
@@ -202,6 +202,10 @@ public class Node : INode
         {
             LeaderId = id;
             Term = term;
+        }
+        if (CommittedIndex > this.CommittedIndex)
+        {
+            StateMachine.Add(Log[CommittedIndex-1]);
         }
         await Task.CompletedTask;
     }

@@ -110,10 +110,27 @@ public class logReplication
 
         await n1.Received().AppendEntryResponse(0, 1, 0);
     }
+    
+    //test 7
+    [Fact]
+    public async Task FollowerLearnsOfUncommittedLog_AddToStateMachine()
+    {
+        Node n = new Node(0);
+        Node n1 = new Node();
+
+        n.AddNode(n1);
+
+        n.State = NodeState.LEADER;
+        n.CommandReceived(5);
+        n.Commit();
+
+        await n.AppendEntries();
+
+        Assert.Equal(5, n1.StateMachine[0]);
+    }
 
 
 
-    //When a follower learns that a log entry is committed, it applies the entry to its local state machine
     //when the leader has received a majority confirmation of a log, it commits it
     
     
@@ -127,6 +144,7 @@ public class logReplication
 
         Assert.Equal(0, n.CommittedIndex);
 
+        n.CommandReceived(5);
         n.Commit();
 
         Assert.Equal(1, n.CommittedIndex);
