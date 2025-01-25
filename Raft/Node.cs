@@ -181,7 +181,7 @@ public class Node : INode
             await node.RefreshTimer();
             await node.AppendEntryResponse(_id, Term, CommittedIndex);
 
-            node.Log.Add(nextValue-1, Log[nextValue-1]);
+            node.Log = Log;
         }
     }
 

@@ -148,18 +148,38 @@ public class logReplication
     }
 
 
-    //given a follower receives an appendentries with log(s) it will add those entries to its personal log
+    //test 10
+    [Fact]
+    public async Task FollowerGetsAppendEntryWithLogs_AddsToPersonalLog()
+    {
+        Node n = new Node();
+        Node n1 = new Node();
+
+        n.AddNode(n1);
+        n1.AddNode(n);
+
+        n.Log.Add(1, 4);
+        n.Log.Add(2, 5);
+        n.nextValue = 3;
+
+        n.State = NodeState.LEADER;
+        await n.AppendEntries();
+
+        Assert.Equal(4, n1.Log[1]);
+        Assert.Equal(5, n1.Log[2]);
+    }
+
     //a followers response to an appendentries includes the followers term number and log entry index
     //when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
     //given a leader node, when a log is committed, it applies it to its internal state machine
     //when a follower receives a valid heartbeat, it increases its commitIndex to match the commit index of the heartbeat
-        //reject the heartbeat if the previous log index / term number does not match your log
+    //reject the heartbeat if the previous log index / term number does not match your log
     //When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
-        //If the follower does not find an entry in its log with the same index and term, then it refuses the new entries
-            //term must be same or newer
-            //if index is greater, it will be decreased by leader
-            //if index is less, we delete what we have
-        //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
+    //If the follower does not find an entry in its log with the same index and term, then it refuses the new entries
+    //term must be same or newer
+    //if index is greater, it will be decreased by leader
+    //if index is less, we delete what we have
+    //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
     //when a leader sends a heartbeat with a log, but does not receive responses from a majority of nodes, the entry is uncommitted
     //if a leader does not response from a follower, the leader continues to send the log entries in subsequent heartbeats  
     //if a leader cannot commit an entry, it does not send a response to the client
