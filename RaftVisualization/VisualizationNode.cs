@@ -59,6 +59,11 @@ public class VisualizationNode : INode
        ((INode)innerNode).CommandReceived(setValue);
     }
 
+    public void Commit()
+    {
+        ((INode)innerNode).Commit();
+    }
+
     public void LeaderCheck()
     {
         ((INode)innerNode).LeaderCheck();

@@ -185,6 +185,14 @@ public class Node : INode
         }
     }
 
+    public void Commit()
+    {
+        if (State == NodeState.LEADER)
+        {
+            CommittedIndex++;
+        }
+    }
+
     public async Task AppendEntryResponse(int id, int term, int CommittedIndex)
     {
         Thread.Sleep(networkRespondDelay);

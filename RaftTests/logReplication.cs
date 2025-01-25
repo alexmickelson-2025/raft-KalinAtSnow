@@ -5,7 +5,7 @@ using Raft;
 namespace RaftTests;
 public class logReplication
 {
-    //when a leader receives a client command the leader sends the log entry in the next appendentries RPC to all nodes
+    //test 1
     [Fact]
     public async Task CommandToLeader_SendsLogEntryToFollowers_AtRPC()
     {
@@ -22,7 +22,7 @@ public class logReplication
         Assert.Equal(5, n1.Log[0]);
     }
 
-    //when a leader receives a command from the client, it is appended to its log
+    //test 2
     [Fact]
     public void CommandFromClientAppendsToLeaderLog()
     {
@@ -47,7 +47,7 @@ public class logReplication
     }
 
 
-    //when a node is new, its log is empty
+    //test 3
     [Fact] 
     public void NewNodesDoNotHaveAnyLogs()
     {
@@ -56,7 +56,7 @@ public class logReplication
         Assert.Empty(n.Log);
     }
 
-    //when a leader wins an election, it initializes the nextIndex for each follower to the index just after the last one it its log
+    //test 4
     [Fact]
     public async Task UponSuccessfulElection_LeaderInitializesNextIndexForEachFollower_IndexOneHigher()
     {
@@ -80,7 +80,7 @@ public class logReplication
         Assert.Equal(4, n2.nextValue);
     }
 
-    //leaders maintain an "nextIndex" for each follower that is the index of the next log entry the leader will send to that follower
+    //test 5
     [Fact]
     public void LeadersStoreTheNextIndexOfEachFollower()
     {
@@ -93,7 +93,7 @@ public class logReplication
         Assert.Single(n.NextIndexes);
     }
 
-    //Highest committed index from the leader is included in AppendEntries RPC's
+    //test 6
     [Fact]
     public async Task HighestCommittedIndexIncludedInAppendEntries()
     {
@@ -111,9 +111,43 @@ public class logReplication
         await n1.Received().AppendEntryResponse(0, 1, 0);
     }
 
+
+
     //When a follower learns that a log entry is committed, it applies the entry to its local state machine
     //when the leader has received a majority confirmation of a log, it commits it
-    //the leader commits logs by incrementing its committed log index
+    
+    
+    
+    //test 9
+    [Fact]
+    public void LeaderCommitsByincrementingCommittedInded()
+    {
+        Node n = new Node(0);
+        n.State = NodeState.LEADER;
+
+        Assert.Equal(0, n.CommittedIndex);
+
+        n.Commit();
+
+        Assert.Equal(1, n.CommittedIndex);
+    }
+
+    [Fact]
+    public void FollowerOrCandidateCanNotCommit()
+    {
+        Node n = new Node(0);
+        Node n1 = new Node(1);
+
+        n1.State = NodeState.CANDIDATE;
+
+        n.Commit();
+        n1.Commit();
+
+        Assert.Equal(0, n.CommittedIndex);
+        Assert.Equal(0, n1.CommittedIndex);
+    }
+
+
     //given a follower receives an appendentries with log(s) it will add those entries to its personal log
     //a followers response to an appendentries includes the followers term number and log entry index
     //when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client

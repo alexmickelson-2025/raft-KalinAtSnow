@@ -19,7 +19,7 @@ namespace Raft
         Dictionary<int, int> NextIndexes { get; set; }
         public int CommittedIndex { get; set; }
 
-
+        void Commit();
         Task AppendEntries();
         Task AskForVote(int id, int term);
         Task AppendEntryResponse(int id, int term, int CommittedIndex);
