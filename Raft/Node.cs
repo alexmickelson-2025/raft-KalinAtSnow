@@ -42,6 +42,7 @@ public class Node : INode
     public int nextValue { get; set; } = 0;
     public Dictionary<int, int> NextIndexes { get; set; } = new Dictionary<int, int>();
     public int CommittedIndex { get; set; } = 0;
+    public List<int> StateMachine { get; set; } = new List<int>();
 
 
     public void AddNode(INode node)
@@ -189,6 +190,7 @@ public class Node : INode
     {
         if (State == NodeState.LEADER)
         {
+            StateMachine.Add(Log[nextValue-1]);
             CommittedIndex++;
         }
     }
