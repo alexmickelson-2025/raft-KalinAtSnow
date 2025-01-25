@@ -187,8 +187,13 @@ public class logReplication
         Assert.Equal(5, n1.Log[2]);
     }
 
+
+
     //a followers response to an appendentries includes the followers term number and log entry index
     //when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
+
+
+
     //test 13
     [Fact]
     public void WhenCommitting_ApplyToInternalStateMachine()
@@ -201,6 +206,10 @@ public class logReplication
 
         Assert.Equal(3, n.StateMachine[0]);
     }
+
+
+
+
     //when a follower receives a valid heartbeat, it increases its commitIndex to match the commit index of the heartbeat
     //reject the heartbeat if the previous log index / term number does not match your log
     //When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
