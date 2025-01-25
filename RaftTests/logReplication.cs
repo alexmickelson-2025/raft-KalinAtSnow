@@ -94,6 +94,23 @@ public class logReplication
     }
 
     //Highest committed index from the leader is included in AppendEntries RPC's
+    [Fact]
+    public async Task HighestCommittedIndexIncludedInAppendEntries()
+    {
+        Node n = new Node(0);
+        var n1 = Substitute.For<Node>(1);
+        var n2 = Substitute.For<Node>(2);
+
+        n.AddNode(n1);
+        n.AddNode(n2);
+
+        n.State = NodeState.LEADER;
+        n.CommandReceived(5);
+        await n.AppendEntries();
+
+        await n1.Received().AppendEntryResponse(0, 1, 0);
+    }
+
     //When a follower learns that a log entry is committed, it applies the entry to its local state machine
     //when the leader has received a majority confirmation of a log, it commits it
     //the leader commits logs by incrementing its committed log index

@@ -17,10 +17,12 @@ namespace Raft
         Dictionary<int, int> Log {  get; set; }
         int nextValue { get; set; }
         Dictionary<int, int> NextIndexes { get; set; }
+        public int CommittedIndex { get; set; }
+
 
         Task AppendEntries();
         Task AskForVote(int id, int term);
-        Task AppendEntryResponse(int id, int term);
+        Task AppendEntryResponse(int id, int term, int CommittedIndex);
         Task BecomeCandidate();
         Task LeaderCheck();
         Task RefreshTimer();

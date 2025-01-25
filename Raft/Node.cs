@@ -41,6 +41,7 @@ public class Node : INode
     public Dictionary<int, int> Log { get; set; } = new Dictionary<int, int>();
     public int nextValue { get; set; } = 0;
     public Dictionary<int, int> NextIndexes { get; set; } = new Dictionary<int, int>();
+    public int CommittedIndex { get; set; } = 0;
 
 
     public void AddNode(INode node)
@@ -178,13 +179,13 @@ public class Node : INode
         foreach (INode node in nodes)
         {
             await node.RefreshTimer();
-            await node.AppendEntryResponse(_id, Term);
+            await node.AppendEntryResponse(_id, Term, CommittedIndex);
 
             node.Log.Add(nextValue-1, Log[nextValue-1]);
         }
     }
 
-    public async Task AppendEntryResponse(int id, int term)
+    public async Task AppendEntryResponse(int id, int term, int CommittedIndex)
     {
         Thread.Sleep(networkRespondDelay);
         if (term > Term)

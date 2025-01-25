@@ -406,7 +406,7 @@ public class ElectionTests
         
         await n.AppendEntries();
 
-        await n1.Received().AppendEntryResponse(0, 0);
+        await n1.Received().AppendEntryResponse(0, 0, 0);
     }
 
     //test 7

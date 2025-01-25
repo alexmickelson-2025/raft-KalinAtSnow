@@ -27,20 +27,21 @@ public class VisualizationNode : INode
     public int networkSendDelay { get => ((INode)innerNode).networkSendDelay; set => ((INode)innerNode).networkSendDelay = value; }
     public Dictionary<int, int> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
     public int nextValue { get => ((INode)innerNode).nextValue; set => ((INode)innerNode).nextValue = value; }
-    public List<int> NextIndexes { get => ((INode)innerNode).NextIndexes; set => ((INode)innerNode).NextIndexes = value; }
+    public int CommittedIndex { get => ((INode)innerNode).CommittedIndex; set => ((INode)innerNode).CommittedIndex = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
     int INode._id { get => ((INode)innerNode)._id; set => ((INode)innerNode)._id = value; }
+    Dictionary<int, int> INode.NextIndexes { get => ((INode)innerNode).NextIndexes; set => ((INode)innerNode).NextIndexes = value; }
 
     public void AppendEntries()
     {
         ((INode)innerNode).AppendEntries();
     }
 
-    public Task AppendEntryResponse(int id, int term)
+    public Task AppendEntryResponse(int id, int term, int CommittedIndex)
     {
-        return ((INode)innerNode).AppendEntryResponse(id, term);
+        return ((INode)innerNode).AppendEntryResponse(id, term, CommittedIndex);
     }
 
     public Task AskForVote(int id, int term)
