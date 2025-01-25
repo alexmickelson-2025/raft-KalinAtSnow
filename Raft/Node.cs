@@ -17,21 +17,37 @@ public class Node : INode
         ElectionTimeout = _random.Next(151, 300) * electionMultiplier;
     }
 
+
+    //global
     private Random _random = new Random();
     public List<INode> nodes = new List<INode>();
     public int _id { get; set; }
+    public NodeState State { get; set; } = NodeState.FOLLOWER;
+    public bool running { get; set; } = true;
+
+    //election
+    public int Term { get; set; } = 0;
     public int VotedId { get; set; } = -1;
     public int VotedTerm { get; set; } = -1;
     public int LeaderId { get; private set; } = -1;
-    public NodeState State { get; set; } = NodeState.FOLLOWER;
-    public int Term { get; set; } = 0;
     public int ElectionTimeout { get; set; } = 0;
-    public bool running { get; set; } = true;
+
+    //running
     public int electionMultiplier { get; set; } = 1;
     public int networkSendDelay { get; set; } = 0;
     public int networkRespondDelay { get; set; } = 0;
+
+    //logs
     public Dictionary<int, int> Log { get; set; } = new Dictionary<int, int>();
     public int nextValue { get; set; } = 0;
+    public Dictionary<int, int> NextIndexes { get; set; } = new Dictionary<int, int>();
+
+
+    public void AddNode(INode node)
+    {
+        nodes.Add(node);
+        NextIndexes.Add(node._id, node.nextValue);
+    }
 
     public Thread Start()
     {
@@ -102,7 +118,12 @@ public class Node : INode
         {
             State = NodeState.LEADER;
             LeaderId = _id;
-            //init nextIndex of others to mine + 1
+            
+            foreach (Node node  in nodes)
+            {
+                node.nextValue = nextValue+1;
+            }
+
             await AppendEntries();
         }
     }
@@ -180,7 +201,7 @@ public class Node : INode
         await Task.CompletedTask;
     }
 
-    public void Command(int setValue)
+    public void CommandReceived(int setValue)
     {
         if (State == NodeState.LEADER)
         {

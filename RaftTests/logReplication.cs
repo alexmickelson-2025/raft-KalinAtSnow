@@ -15,7 +15,7 @@ public class logReplication
         n.nodes.Add(n1);
         
         n.State = NodeState.LEADER;
-        n.Command(5);
+        n.CommandReceived(5);
 
         await n.AppendEntries();
 
@@ -29,7 +29,7 @@ public class logReplication
         Node n = new Node();
         n.State = NodeState.LEADER;
 
-        n.Command(1);
+        n.CommandReceived(1);
 
         Assert.Equal(0, n.nextValue-1);
         Assert.Equal(1, n.Log[0]);
@@ -40,7 +40,7 @@ public class logReplication
     {
         Node n = new Node();
 
-        n.Command(1);
+        n.CommandReceived(1);
 
         Assert.Empty(n.Log);
         Assert.Empty(n.Log);
@@ -68,14 +68,31 @@ public class logReplication
         n1.nodes = [n, n2];
         n2.nodes = [n1, n];
 
+        n.Log.Add(1, 4);
+        n.Log.Add(2, 5);
         n.nextValue = 3;
+
+        Assert.Equal(3, n.nextValue);
 
         await n.StartElection();
 
         Assert.Equal(4, n1.nextValue);
         Assert.Equal(4, n2.nextValue);
     }
+
     //leaders maintain an "nextIndex" for each follower that is the index of the next log entry the leader will send to that follower
+    [Fact]
+    public void LeadersStoreTheNextIndexOfEachFollower()
+    {
+        Node n = new Node();
+        Node n1 = new Node();
+
+        n.AddNode(n1);
+        n1.AddNode(n);
+
+        Assert.Single(n.NextIndexes);
+    }
+
     //Highest committed index from the leader is included in AppendEntries RPC's
     //When a follower learns that a log entry is committed, it applies the entry to its local state machine
     //when the leader has received a majority confirmation of a log, it commits it

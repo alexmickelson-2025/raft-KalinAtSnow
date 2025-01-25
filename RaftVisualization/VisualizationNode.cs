@@ -27,6 +27,7 @@ public class VisualizationNode : INode
     public int networkSendDelay { get => ((INode)innerNode).networkSendDelay; set => ((INode)innerNode).networkSendDelay = value; }
     public Dictionary<int, int> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
     public int nextValue { get => ((INode)innerNode).nextValue; set => ((INode)innerNode).nextValue = value; }
+    public List<int> NextIndexes { get => ((INode)innerNode).NextIndexes; set => ((INode)innerNode).NextIndexes = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
@@ -52,9 +53,9 @@ public class VisualizationNode : INode
         ((INode)innerNode).BecomeCandidate();
     }
 
-    public void Command(int setValue)
+    public void CommandReceived(int setValue)
     {
-       ((INode)innerNode).Command(setValue);
+       ((INode)innerNode).CommandReceived(setValue);
     }
 
     public void LeaderCheck()
