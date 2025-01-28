@@ -44,6 +44,10 @@ public class Node : INode
     public int CommittedIndex { get; set; } = 0;
     public List<int> StateMachine { get; set; } = new List<int>();
 
+    public void PauseToggle()
+    {
+        running = false;
+    }
 
     public void AddNode(INode node)
     {
@@ -121,7 +125,7 @@ public class Node : INode
             State = NodeState.LEADER;
             LeaderId = _id;
             
-            foreach (Node node  in nodes)
+            foreach (INode node  in nodes)
             {
                 node.nextValue = nextValue+1;
             }
