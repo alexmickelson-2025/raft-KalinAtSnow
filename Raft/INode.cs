@@ -14,7 +14,7 @@ namespace Raft
         int electionMultiplier { get; set; }
          int networkRespondDelay { get; set; }
          int networkSendDelay { get; set; }
-        Dictionary<int, int> Log {  get; set; }
+        public List<(int term, int command)> Log { get; set; }
         int nextValue { get; set; }
         Dictionary<int, int> NextIndexes { get; set; }
         public int CommittedIndex { get; set; }
@@ -22,7 +22,7 @@ namespace Raft
         void Commit();
         Task AppendEntries();
         Task AskForVote(int id, int term);
-        (int, int) AppendEntryResponse(int id, int term, int CommittedIndex);
+        (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int id, int term, int CommittedIndex);
         Task BecomeCandidate();
         Task LeaderCheck();
         Task RefreshTimer();

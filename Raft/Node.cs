@@ -38,11 +38,11 @@ public class Node : INode
     public int networkRespondDelay { get; set; } = 0;
 
     //logs
-    public Dictionary<int, int> Log { get; set; } = new Dictionary<int, int>();
+    public List<(int term, int command)> Log { get; set; } = new List<(int term, int command)>();
     public int nextValue { get; set; } = 0;
     public Dictionary<int, int> NextIndexes { get; set; } = new Dictionary<int, int>();
     public int CommittedIndex { get; set; } = 0;
-    public List<int> StateMachine { get; set; } = new List<int>();
+    public Dictionary<int, int> StateMachine { get; set; } = new Dictionary<int, int>();
 
     public void PauseToggle()
     {
@@ -181,12 +181,21 @@ public class Node : INode
     public async Task AppendEntries()
     {
         Thread.Sleep(networkSendDelay);
+        var _majority = Math.Ceiling((double)nodes.Count / 2);
+        int success = 0;
         foreach (INode node in nodes)
         {
             await node.RefreshTimer();
             node.Log = Log;
-            node.AppendEntryResponse(_id, Term, CommittedIndex);
-
+            var response = node.AppendEntryResponse(_id, Term, CommittedIndex);
+            if (response.valid == true)
+            {
+                success++;
+            }
+        }
+        if (success >= _majority)
+        {
+            Commit();
         }
     }
 
@@ -195,11 +204,18 @@ public class Node : INode
         if (State == NodeState.LEADER)
         {
             CommittedIndex++;
-            StateMachine.Add(Log[nextValue-1]);
+            if (StateMachine.ContainsKey(nextValue - 1))
+            {
+                StateMachine[nextValue - 1] = Log[nextValue - 1].command;
+            }
+            else
+            {
+                StateMachine.Add(nextValue - 1, Log[nextValue-1].command);
+            }
         }
     }
 
-    public (int, int) AppendEntryResponse(int id, int term, int CommittedIndex)
+    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int id, int term, int CommittedIndex)
     {
         Thread.Sleep(networkRespondDelay);
         if (term > Term)
@@ -210,9 +226,10 @@ public class Node : INode
         if (CommittedIndex > this.CommittedIndex)
         {
             this.CommittedIndex = CommittedIndex;
-            StateMachine.Add(Log[CommittedIndex-1]);
+            
+            StateMachine.Add(CommittedIndex-1 , Log[CommittedIndex - 1].command);
         }
-        return (this.Term, this.nextValue);
+        return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
     }
 
     public async Task RefreshTimer()
@@ -225,7 +242,7 @@ public class Node : INode
     {
         if (State == NodeState.LEADER)
         {
-            Log.Add(nextValue, setValue);
+            Log.Add((Term, setValue));
             nextValue++;
         } 
     }

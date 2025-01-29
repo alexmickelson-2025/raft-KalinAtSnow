@@ -32,23 +32,4 @@ public class PausingTests
 
         n1.DidNotReceive().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
     }
-
-    [Fact]
-    public async Task WhenNodeIsLeader_GetPaused_OtherNodesDontGetHeartbeat_UnpauseAndHeartbeatResume()
-    {
-        Node n = new Node();
-        var n1 = Substitute.For<INode>();
-
-        n.AddNode(n1);
-
-        n.State = NodeState.LEADER;
-
-        n.Start();
-        n.PauseToggle();
-
-        Thread.Sleep(400);
-
-        n1.DidNotReceive().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
-        n.running = false;
-    }
 }

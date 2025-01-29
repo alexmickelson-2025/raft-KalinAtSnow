@@ -19,7 +19,7 @@ public class logReplication
 
         await n.AppendEntries();
 
-        Assert.Equal(5, n1.Log[0]);
+        Assert.Equal(5, n1.Log[0].command);
     }
 
     //test 2
@@ -32,7 +32,7 @@ public class logReplication
         n.CommandReceived(1);
 
         Assert.Equal(0, n.nextValue-1);
-        Assert.Equal(1, n.Log[0]);
+        Assert.Equal(1, n.Log[0].command);
     }
 
     [Fact]
@@ -68,8 +68,8 @@ public class logReplication
         n1.nodes = [n, n2];
         n2.nodes = [n1, n];
 
-        n.Log.Add(1, 4);
-        n.Log.Add(2, 5);
+        n.Log.Add((1, 4));
+        n.Log.Add((2, 5));
         n.nextValue = 3;
 
         Assert.Equal(3, n.nextValue);
@@ -129,10 +129,22 @@ public class logReplication
         Assert.Equal(5, n1.StateMachine[0]);
     }
 
-
-
-    //when the leader has received a majority confirmation of a log, it commits it
+    //test 8
+    [Fact]
+    public async Task LeaderGetsMajorityConfirmationOfLog_GetsCommitted()
+    {
+        var n = new Node(0);
+        var n1 = new Node(1);
     
+        n.AddNode(n1);
+
+        n.State = NodeState.LEADER;
+        n.CommandReceived(5);
+
+        await n.AppendEntries();
+
+        Assert.Equal(1, n.CommittedIndex);
+    }
     
     
     //test 9
@@ -176,15 +188,15 @@ public class logReplication
         n.AddNode(n1);
         n1.AddNode(n);
 
-        n.Log.Add(1, 4);
-        n.Log.Add(2, 5);
+        n.Log.Add((1, 4));
+        n.Log.Add((2, 5));
         n.nextValue = 3;
 
         n.State = NodeState.LEADER;
         await n.AppendEntries();
 
-        Assert.Equal(4, n1.Log[1]);
-        Assert.Equal(5, n1.Log[2]);
+        Assert.Equal(4, n1.Log[0].command);
+        Assert.Equal(5, n1.Log[1].command);
     }
 
     //test 11
@@ -195,8 +207,8 @@ public class logReplication
 
         var result = n.AppendEntryResponse(0,0,0);
 
-        Assert.Equal(0, result.Item1);
-        Assert.Equal(0, result.Item2);
+        Assert.Equal(0, result.TermNumber);
+        Assert.Equal(0, result.LogIndex);
     }
 
     //when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
@@ -222,7 +234,7 @@ public class logReplication
     public async Task WhenFollowerGetsHeartbeat_increasesCommitIndexToMatchIndexOfLeader()
     {
         Node n = new Node();
-        var n1 = Substitute.For<Node>();
+        var n1 = Substitute.For<INode>();
         n.AddNode(n1);
 
         n.State = NodeState.LEADER;
