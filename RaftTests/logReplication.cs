@@ -116,10 +116,10 @@ public class logReplication
     public async Task FollowerLearnsOfUncommittedLog_AddToStateMachine()
     {
         Node n = new Node(0);
-        Node n1 = new Node();
+        Node n1 = new Node(1);
 
         n.AddNode(n1);
-
+        n.Term = 1;
         n.State = NodeState.LEADER;
         n.CommandReceived(5);
         n.Commit();
@@ -137,7 +137,7 @@ public class logReplication
         var n1 = new Node(1);
     
         n.AddNode(n1);
-
+        n.Term = 1;
         n.State = NodeState.LEADER;
         n.CommandReceived(5);
 
@@ -238,7 +238,7 @@ public class logReplication
         n.AddNode(n1);
 
         n.State = NodeState.LEADER;
-
+        n.Term = 1;
         n.CommandReceived(3);
         n.Commit();
 
@@ -283,7 +283,30 @@ public class logReplication
             //if index is greater, it will be decreased by leader
             //if index is less, we delete what we have
         //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
-    //when a leader sends a heartbeat with a log, but does not receive responses from a majority of nodes, the entry is uncommitted
+
+
+    //test 16
+    [Fact]
+    public async Task LeaderSendsHeartbeat_DoesNotRecieveResponseFromMajority_RemainsUncommitted()
+    {
+        var n = new Node();
+        var n1 = new Node(1);
+        var n2 = new Node(2);
+
+        n.State = NodeState.LEADER;
+        n.AddNode(n1);
+        n.AddNode(n2);
+
+        //will return false as shown in 14.b
+        n1.Log.Add((5, 2));
+        n1.Term = 5;
+        n2.Log.Add((5, 2));
+        n2.Term = 5;
+
+        await n.AppendEntries();
+
+        Assert.Equal(0, n.CommittedIndex);
+    }
     //if a leader does not response from a follower, the leader continues to send the log entries in subsequent heartbeats  
     //if a leader cannot commit an entry, it does not send a response to the client
     //if a node receives an appendentries with a logs that are too far in the future from your local state, you should reject the appendentries
