@@ -12,7 +12,7 @@ public class logReplication
         Node n = new Node();
         Node n1 = new Node();
 
-        n.nodes.Add(n1);
+        n.AddNode(n1);
         
         n.State = NodeState.LEADER;
         n.CommandReceived(5);
@@ -330,12 +330,28 @@ public class logReplication
     }
 
 
-    //if index is greater, it will be decreased by leader
+    //15 1 b
     [Fact]
     public async Task FollowerIndexIsGreaterThanLeader_LeaderDecreasesItsLocalCheck()
     {
         var n = new Node();
+        var n1 = Substitute.For<INode>();
+
+        n.Log.Add((2, 5));
+        n.nextValue++;
+
+        n1.Log = [(2, 6), (2, 4), (2, 5)];
+        n1.nextValue = 3;
+
+        n.AddNode(n1);
+
+        await n.AppendEntries();
+
+        Assert.Equal(2,n.NextIndexes[0]);
+        Assert.Equal(2,n1.nextValue);
     }
+
+
             //if index is less, we delete what we have
         //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
 

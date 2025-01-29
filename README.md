@@ -46,7 +46,7 @@
 [x] 15. When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
 [x]		1. 	If the follower does not find an entry in its log with the same index and term, then it refuses the new entries
 [x]			a. term must be same or newer
-[ ]			b. if index is greater, it will be decreased by leader
+[x]			b. if index is greater, it will be decreased by leader
 [ ]			c. if index is less, we delete what we have
 [ ]		2. 	if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
 [x] 16. when a leader sends a heartbeat with a log, but does not receive responses from a majority of nodes, the entry is uncommitted

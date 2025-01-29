@@ -199,6 +199,11 @@ public class Node : INode
             {
                 success++;
             }
+            else
+            {
+                NextIndexes[node._id]--;
+                node.nextValue--;
+            }
         }
         if (success >= _majority)
         {
