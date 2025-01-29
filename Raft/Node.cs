@@ -182,7 +182,7 @@ public class Node : INode
     {
         Thread.Sleep(networkSendDelay);
         var _majority = Math.Ceiling((double)nodes.Count / 2);
-        int success = 0;
+        int success = 1;
         foreach (INode node in nodes)
         {
             await node.RefreshTimer();

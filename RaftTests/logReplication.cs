@@ -286,6 +286,7 @@ public class logReplication
 
 
     //test 16
+    //this test isn't testing non responses - its testing failing responses. I'm not sure how I can test non response with my current implementation
     [Fact]
     public async Task LeaderSendsHeartbeat_DoesNotRecieveResponseFromMajority_RemainsUncommitted()
     {
@@ -307,7 +308,27 @@ public class logReplication
 
         Assert.Equal(0, n.CommittedIndex);
     }
-    //if a leader does not response from a follower, the leader continues to send the log entries in subsequent heartbeats  
+
+    //test 17
+    // same as above, not sure how to test unresponsive
+    [Fact]
+    public void LeaderDoesNotGetResponse_ContinuesToSend() {
+        var n = new Node();
+        var n1 = Substitute.For<INode>();
+
+        n.State = NodeState.LEADER;
+        n1.Term = 5;
+
+        n.AddNode(n1);
+        Thread t = n.Start();
+
+        n1.ClearReceivedCalls();
+
+        t.Join();
+        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
+    }
+
+
     //if a leader cannot commit an entry, it does not send a response to the client
     //if a node receives an appendentries with a logs that are too far in the future from your local state, you should reject the appendentries
     //if a node receives and appendentries with a term and index that do not match, you will reject the appendentry until you find a matching log
