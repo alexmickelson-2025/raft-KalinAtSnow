@@ -185,7 +185,7 @@ public class Node : INode
         {
             await node.RefreshTimer();
             node.Log = Log;
-            await node.AppendEntryResponse(_id, Term, CommittedIndex);
+            node.AppendEntryResponse(_id, Term, CommittedIndex);
 
         }
     }
@@ -199,7 +199,7 @@ public class Node : INode
         }
     }
 
-    public async Task AppendEntryResponse(int id, int term, int CommittedIndex)
+    public (int, int) AppendEntryResponse(int id, int term, int CommittedIndex)
     {
         Thread.Sleep(networkRespondDelay);
         if (term > Term)
@@ -209,9 +209,10 @@ public class Node : INode
         }
         if (CommittedIndex > this.CommittedIndex)
         {
+            this.CommittedIndex = CommittedIndex;
             StateMachine.Add(Log[CommittedIndex-1]);
         }
-        await Task.CompletedTask;
+        return (this.Term, this.nextValue);
     }
 
     public async Task RefreshTimer()

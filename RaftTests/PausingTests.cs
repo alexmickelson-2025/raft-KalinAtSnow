@@ -30,7 +30,7 @@ public class PausingTests
 
         Thread.Sleep(400);
 
-        await n1.DidNotReceive().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
+        n1.DidNotReceive().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class PausingTests
 
         Thread.Sleep(400);
 
-        await n1.DidNotReceive().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
+        n1.DidNotReceive().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
         n.running = false;
     }
 }

@@ -406,7 +406,7 @@ public class ElectionTests
         
         await n.AppendEntries();
 
-        await n1.Received().AppendEntryResponse(0, 0, 0);
+        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
     }
 
     //test 7

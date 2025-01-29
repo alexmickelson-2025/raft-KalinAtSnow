@@ -38,10 +38,10 @@
 [ ]  8. when the leader has received a majority confirmation of a log, it commits it
 [x]  9. the leader commits logs by incrementing its committed log index
 [x] 10. given a follower receives an appendentries with log(s) it will add those entries to its personal log
-[ ] 11. a followers response to an appendentries includes the followers term number and log entry index
+[x] 11. a followers response to an appendentries includes the followers term number and log entry index
 [ ] 12. when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
 [x] 13. given a leader node, when a log is committed, it applies it to its internal state machine
-[ ] 14. when a follower receives a valid heartbeat, it increases its commitIndex to match the commit index of the heartbeat
+[x] 14. when a follower receives a valid heartbeat, it increases its commitIndex to match the commit index of the heartbeat
 [ ]		1. reject the heartbeat if the previous log index / term number does not match your log
 [ ] 15. When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
 [ ]		1. 	If the follower does not find an entry in its log with the same index and term, then it refuses the new entries

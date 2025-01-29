@@ -39,7 +39,7 @@ public class VisualizationNode : INode
         ((INode)innerNode).AppendEntries();
     }
 
-    public Task AppendEntryResponse(int id, int term, int CommittedIndex)
+    public (int, int) AppendEntryResponse(int id, int term, int CommittedIndex)
     {
         return ((INode)innerNode).AppendEntryResponse(id, term, CommittedIndex);
     }
