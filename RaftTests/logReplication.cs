@@ -249,13 +249,40 @@ public class logReplication
         Assert.Equal(1, n1.CommittedIndex);
     }
 
-        //reject the heartbeat if the previous log index / term number does not match your log
+    //reject the heartbeat if the previous log index / term number does not match your log
+    //14.b
+    [Fact]
+    public void RejectHeartbeatWhenPreviousCommittedIndexDoesNotMatchLog()
+    {
+        Node n = new Node();
+
+        n.Log.Add((5,2));
+        n.CommittedIndex = 1;
+
+        var response = n.AppendEntryResponse(1,1,0);
+
+        Assert.False(response.valid);
+    }
+
+    [Fact]
+    public void RejectHeartbeatWhenPreviousLogTermDoesNotMatchLog()
+    {
+        Node n = new Node();
+
+        n.Log.Add((5, 2));
+        n.Term = 5;
+
+        var response = n.AppendEntryResponse(1, 1, 0);
+
+        Assert.False(response.valid);
+    }
+
     //When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
         //If the follower does not find an entry in its log with the same index and term, then it refuses the new entries
-             //term must be same or newer
+            //term must be same or newer
             //if index is greater, it will be decreased by leader
-        //if index is less, we delete what we have
-    //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
+            //if index is less, we delete what we have
+        //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
     //when a leader sends a heartbeat with a log, but does not receive responses from a majority of nodes, the entry is uncommitted
     //if a leader does not response from a follower, the leader continues to send the log entries in subsequent heartbeats  
     //if a leader cannot commit an entry, it does not send a response to the client

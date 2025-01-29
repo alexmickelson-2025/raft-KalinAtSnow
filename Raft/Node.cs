@@ -223,13 +223,25 @@ public class Node : INode
             LeaderId = id;
             Term = term;
         }
+        else
+        {
+            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: false);
+        }
+
+        if (CommittedIndex == 0 && this.CommittedIndex <= CommittedIndex)
+        {
+            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
+        }
+
         if (CommittedIndex > this.CommittedIndex)
         {
             this.CommittedIndex = CommittedIndex;
             
             StateMachine.Add(CommittedIndex-1 , Log[CommittedIndex - 1].command);
+            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
         }
-        return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
+        
+        return (TermNumber: this.Term, LogIndex: this.nextValue, valid: false);
     }
 
     public async Task RefreshTimer()
