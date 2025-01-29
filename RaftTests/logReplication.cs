@@ -70,14 +70,14 @@ public class logReplication
 
         n.Log.Add((1, 4));
         n.Log.Add((2, 5));
-        n.nextValue = 3;
+        n.nextValue = 2;
 
-        Assert.Equal(3, n.nextValue);
+        Assert.Equal(2, n.nextValue);
 
         await n.StartElection();
 
-        Assert.Equal(4, n1.nextValue);
-        Assert.Equal(4, n2.nextValue);
+        Assert.Equal(3, n1.nextValue);
+        Assert.Equal(3, n2.nextValue);
     }
 
     //test 5
@@ -190,7 +190,7 @@ public class logReplication
 
         n.Log.Add((1, 4));
         n.Log.Add((2, 5));
-        n.nextValue = 3;
+        n.nextValue = 2;
 
         n.State = NodeState.LEADER;
         await n.AppendEntries();
@@ -234,13 +234,15 @@ public class logReplication
     public async Task WhenFollowerGetsHeartbeat_increasesCommitIndexToMatchIndexOfLeader()
     {
         Node n = new Node();
-        var n1 = Substitute.For<INode>();
+        var n1 = new Node();
         n.AddNode(n1);
 
         n.State = NodeState.LEADER;
 
         n.CommandReceived(3);
         n.Commit();
+
+        Assert.Equal(1, n.CommittedIndex);
 
         await n.AppendEntries();
 
