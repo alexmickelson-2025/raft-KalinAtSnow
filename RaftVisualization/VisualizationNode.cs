@@ -25,9 +25,9 @@ public class VisualizationNode : INode
     public int electionMultiplier { get => ((INode)innerNode).electionMultiplier; set => ((INode)innerNode).electionMultiplier = value; }
     public int networkRespondDelay { get => ((INode)innerNode).networkRespondDelay; set => ((INode)innerNode).networkRespondDelay = value; }
     public int networkSendDelay { get => ((INode)innerNode).networkSendDelay; set => ((INode)innerNode).networkSendDelay = value; }
-    public Dictionary<int, int> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
     public int nextValue { get => ((INode)innerNode).nextValue; set => ((INode)innerNode).nextValue = value; }
     public int CommittedIndex { get => ((INode)innerNode).CommittedIndex; set => ((INode)innerNode).CommittedIndex = value; }
+    public List<(int term, int command)> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
@@ -39,9 +39,9 @@ public class VisualizationNode : INode
         ((INode)innerNode).AppendEntries();
     }
 
-    public (int TermNumber, int LogIndex) AppendEntryResponse(int id, int term, int CommittedIndex)
+    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, (int term, int command) logValue)
     {
-        return ((INode)innerNode).AppendEntryResponse(id, term, CommittedIndex);
+        return ((INode)innerNode).AppendEntryResponse(leaderId, term, CommittedIndex, indexTerm, logValue);
     }
 
     public Task AskForVote(int id, int term)

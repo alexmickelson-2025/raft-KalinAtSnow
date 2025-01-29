@@ -43,9 +43,9 @@
 [x] 13. given a leader node, when a log is committed, it applies it to its internal state machine
 [x] 14. when a follower receives a valid heartbeat, it increases its commitIndex to match the commit index of the heartbeat
 [x]		1. reject the heartbeat if the previous log index / term number does not match your log
-[ ] 15. When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
-[ ]		1. 	If the follower does not find an entry in its log with the same index and term, then it refuses the new entries
-[ ]			a. term must be same or newer
+[x] 15. When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
+[x]		1. 	If the follower does not find an entry in its log with the same index and term, then it refuses the new entries
+[x]			a. term must be same or newer
 [ ]			b. if index is greater, it will be decreased by leader
 [ ]			c. if index is less, we delete what we have
 [ ]		2. 	if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
@@ -54,3 +54,9 @@
 [ ] 18. if a leader cannot commit an entry, it does not send a response to the client
 [ ] 19. if a node receives an appendentries with a logs that are too far in the future from your local state, you should reject the appendentries
 [ ] 20. if a node receives and appendentries with a term and index that do not match, you will reject the appendentry until you find a matching log 
+
+# pause
+[x] 1.
+[ ] 2.
+[ ] 3.
+[ ] 4.

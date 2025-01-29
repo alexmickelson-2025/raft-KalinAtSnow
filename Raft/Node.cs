@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Transactions;
+using System.Xml.Linq;
 
 namespace Raft;
 
@@ -181,13 +182,19 @@ public class Node : INode
     public async Task AppendEntries()
     {
         Thread.Sleep(networkSendDelay);
-        var _majority = Math.Ceiling((double)nodes.Count / 2);
+        var _majority = Math.Ceiling((double)nodes.Count+1 / 2);
         int success = 1;
         foreach (INode node in nodes)
         {
             await node.RefreshTimer();
-            node.Log = Log;
-            var response = node.AppendEntryResponse(_id, Term, CommittedIndex);
+            
+            if ( node.Log is null)
+            {
+                node.Log = new List<(int term, int command)>();
+            }
+
+            node.Log.Add(Log[nextValue-1]);
+            var response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]);
             if (response.valid == true)
             {
                 success++;
@@ -215,12 +222,13 @@ public class Node : INode
         }
     }
 
-    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int id, int term, int CommittedIndex)
+    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, (int term, int command) logValue)
     {
         Thread.Sleep(networkRespondDelay);
+
         if (term > Term)
         {
-            LeaderId = id;
+            LeaderId = leaderId;
             Term = term;
         }
         else
@@ -230,13 +238,13 @@ public class Node : INode
 
         if (CommittedIndex == 0 && this.CommittedIndex <= CommittedIndex)
         {
+            
             return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
         }
 
         if (CommittedIndex > this.CommittedIndex)
         {
             this.CommittedIndex = CommittedIndex;
-            
             StateMachine.Add(CommittedIndex-1 , Log[CommittedIndex - 1].command);
             return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
         }

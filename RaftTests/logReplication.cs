@@ -108,7 +108,7 @@ public class logReplication
         n.CommandReceived(5);
         await n.AppendEntries();
 
-        n1.Received().AppendEntryResponse(0, 1, 0);
+        n1.Received().AppendEntryResponse(0, 1, 0, Arg.Any<int>(), Arg.Any<(int, int)>());
     }
     
     //test 7
@@ -187,12 +187,13 @@ public class logReplication
 
         n.AddNode(n1);
         n1.AddNode(n);
+        n.State = NodeState.LEADER;
 
         n.Log.Add((1, 4));
+        n.nextValue++;
+        await n.AppendEntries();
         n.Log.Add((2, 5));
-        n.nextValue = 2;
-
-        n.State = NodeState.LEADER;
+        n.nextValue++;
         await n.AppendEntries();
 
         Assert.Equal(4, n1.Log[0].command);
@@ -205,7 +206,7 @@ public class logReplication
     {
         Node n = new Node();
 
-        var result = n.AppendEntryResponse(0,0,0);
+        var result = n.AppendEntryResponse(0,0,0, Arg.Any<int>(), Arg.Any<(int, int)>());
 
         Assert.Equal(0, result.TermNumber);
         Assert.Equal(0, result.LogIndex);
@@ -249,7 +250,6 @@ public class logReplication
         Assert.Equal(1, n1.CommittedIndex);
     }
 
-    //reject the heartbeat if the previous log index / term number does not match your log
     //14.b
     [Fact]
     public void RejectHeartbeatWhenPreviousCommittedIndexDoesNotMatchLog()
@@ -259,7 +259,7 @@ public class logReplication
         n.Log.Add((5,2));
         n.CommittedIndex = 1;
 
-        var response = n.AppendEntryResponse(1,1,0);
+        var response = n.AppendEntryResponse(1,1,0, Arg.Any<int>(), Arg.Any<(int, int)>());
 
         Assert.False(response.valid);
     }
@@ -272,15 +272,70 @@ public class logReplication
         n.Log.Add((5, 2));
         n.Term = 5;
 
-        var response = n.AppendEntryResponse(1, 1, 0);
+        var response = n.AppendEntryResponse(1, 1, 0, Arg.Any<int>(), Arg.Any<(int, int)>());
 
         Assert.False(response.valid);
     }
 
-    //When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
-        //If the follower does not find an entry in its log with the same index and term, then it refuses the new entries
-            //term must be same or newer
-            //if index is greater, it will be decreased by leader
+    // test 15
+    [Fact]
+    public async Task LeaderIncludesPreviousIndexAndCurrentTermInAppendRPC()
+    {
+        var n = new Node();
+        var n1 = Substitute.For<INode>();
+        n.AddNode(n1);
+        n.State = NodeState.LEADER;
+        n.Term = 2;
+
+        //needed with commit being implemented
+        n.Log.Add((2,99));
+        n.nextValue++;
+        await n.AppendEntries();
+
+        n.Log.Add((2, 98));
+        n.nextValue++;
+        await n.AppendEntries();
+
+        n1.Received().AppendEntryResponse(Arg.Any<int>(), 2, Arg.Any<int>(), 1, Arg.Any<(int, int)>());
+    }
+
+
+    // 15 1
+    [Fact]
+    public void FollowerDoesNotFindEntry_RefusesRPC()
+    {
+        var n = new Node();
+        n.Log.Add((2,5));
+        n.Log.Add((2,6)); 
+        n.Term = 2;
+
+        var badTerm = n.AppendEntryResponse(0, 1, 0, 1, (0, 0));
+        Assert.False(badTerm.valid);
+    }
+
+    // 15 1 a
+    [Fact]
+    public async Task FollowerAddsLogWhenTermIsHigher()
+    {
+        var n = new Node();
+        var n1 = Substitute.For<INode>();
+        n.AddNode(n1);
+
+        n.Log.Add((3, 5));
+        n.nextValue++;
+        n.Term = 3;
+        n.State = NodeState.LEADER;
+        await n.AppendEntries();
+        Assert.Single(n1.Log);
+    }
+
+
+    //if index is greater, it will be decreased by leader
+    [Fact]
+    public async Task FollowerIndexIsGreaterThanLeader_LeaderDecreasesItsLocalCheck()
+    {
+        var n = new Node();
+    }
             //if index is less, we delete what we have
         //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
 
@@ -303,6 +358,8 @@ public class logReplication
         n1.Term = 5;
         n2.Log.Add((5, 2));
         n2.Term = 5;
+        n.Log.Add((1,1));
+        n.nextValue++;
 
         await n.AppendEntries();
 
@@ -324,8 +381,11 @@ public class logReplication
 
         n1.ClearReceivedCalls();
 
+        Thread.Sleep(50);
+
         t.Join();
-        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
+
+        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<(int, int)>());
     }
 
 
