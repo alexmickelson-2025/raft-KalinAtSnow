@@ -18,7 +18,6 @@ public class Node : INode
         ElectionTimeout = _random.Next(151, 300) * electionMultiplier;
     }
 
-
     //global
     private Random _random = new Random();
     public List<INode> nodes = new List<INode>();
@@ -94,7 +93,6 @@ public class Node : INode
 
     public async Task LeaderCheck(int votes)
     {
-
         foreach (INode node in nodes)
         {
             if (node._id == LeaderId && node.Term >= Term)
@@ -281,4 +279,17 @@ public class Node : INode
         } 
     }
 }
+
+public class LogEntries
+{
+    public LogEntries(int term, int key, int value)
+    {
+        this.term = term;
+        this.key = key;
+        this.value = value;
+    }
+    public int term { get; private set; }
+    public int key { get; private set; }
+    public int value { get; private set; }
+} 
 

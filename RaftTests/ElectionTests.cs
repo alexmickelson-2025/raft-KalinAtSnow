@@ -28,9 +28,6 @@ public class ElectionTests
     {
         Node n = new();
         await n.StartElection();
-        //leader check is now called within start election - can't validate candidate
-        //Assert.Equal(NodeState.CANDIDATE, n.State);
-        //await n.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n.State);
     }
 
@@ -47,10 +44,7 @@ public class ElectionTests
         n2.nodes = [n, n2];
 
         await n.StartElection();
-        //leader check is now called in start election, can't check status
-        //Assert.Equal(NodeState.CANDIDATE, n.State);
 
-        //await n.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n.State);
     }
 
@@ -110,7 +104,6 @@ public class ElectionTests
     {
         Node n = new();
         await n.StartElection();
-        //await n.LeaderCheck();
 
         Assert.Equal(1, n.Term);
 
@@ -120,7 +113,6 @@ public class ElectionTests
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        //heartbeat to show leader to new node
         await n.AppendEntries();
         Assert.Equal(1, n1.Term);
     }
@@ -132,7 +124,6 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
-        //await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
@@ -142,7 +133,6 @@ public class ElectionTests
 
         //Term 2
         await n1.StartElection();
-        //await n1.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n1.State);
         Assert.Equal(2, n1.Term);
 
@@ -198,7 +188,6 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
-        //await n.LeaderCheck();
         
         //force it to be higher
         n.Term = 2;
@@ -212,9 +201,6 @@ public class ElectionTests
 
         //Heartbeat from n at term 2
         await n.AppendEntries();
-        
-        //check to see if old election passed
-        //await n1.LeaderCheck();
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(NodeState.FOLLOWER, n1.State);
@@ -244,7 +230,6 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
-        //await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
@@ -254,7 +239,6 @@ public class ElectionTests
 
         //Term 2
         await n1.StartElection();
-        //await n1.LeaderCheck();
 
         //restarts or comes online late - defaults 0 term
         Node n2 = new(2);
@@ -438,7 +422,6 @@ public class ElectionTests
     {
         Node n = new();
         await n.StartElection();
-        //await n.LeaderCheck();
         Thread t = n.Start();
 
         var n1 = Substitute.For<Node>();
