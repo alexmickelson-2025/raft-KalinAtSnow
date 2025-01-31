@@ -271,7 +271,7 @@ public class Node : INode
         
     }
 
-    public void CommandReceived(int setValue)
+    public void CommandReceived(int setKey, int setValue)
     {
         if (State == NodeState.LEADER)
         {

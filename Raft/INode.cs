@@ -29,7 +29,7 @@ namespace Raft
         void RefreshTimer();
         void AddNode(INode node);
         Task RespondVote(int id, int term);
-        void CommandReceived(int setValue);
+        void CommandReceived(int setKey, int setValue);
         Thread Start();
         Task StartElection();
     }

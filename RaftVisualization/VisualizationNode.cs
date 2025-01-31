@@ -60,9 +60,9 @@ public class VisualizationNode : INode
         ((INode)innerNode).BecomeCandidate();
     }
 
-    public void CommandReceived(int setValue)
+    public void CommandReceived(int setKey, int setValue)
     {
-       ((INode)innerNode).CommandReceived(setValue);
+        ((INode)innerNode).CommandReceived(setKey, setValue);
     }
 
     public void Commit()

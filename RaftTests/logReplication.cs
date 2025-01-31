@@ -15,7 +15,7 @@ public class logReplication
         n.AddNode(n1);
         
         n.State = NodeState.LEADER;
-        n.CommandReceived(5);
+        n.CommandReceived(0,5);
 
         await n.AppendEntries();
 
@@ -29,7 +29,7 @@ public class logReplication
         Node n = new Node();
         n.State = NodeState.LEADER;
 
-        n.CommandReceived(1);
+        n.CommandReceived(0,1);
 
         Assert.Equal(0, n.nextValue-1);
         Assert.Equal(1, n.Log[0].command);
@@ -40,7 +40,7 @@ public class logReplication
     {
         Node n = new Node();
 
-        n.CommandReceived(1);
+        n.CommandReceived(0,1);
 
         Assert.Empty(n.Log);
         Assert.Empty(n.Log);
@@ -105,7 +105,7 @@ public class logReplication
         n.AddNode(n2);
 
         n.State = NodeState.LEADER;
-        n.CommandReceived(5);
+        n.CommandReceived(0,5);
         await n.AppendEntries();
 
         n1.Received().AppendEntryResponse(0, 1, 0, Arg.Any<int>(), Arg.Any<(int, int)>());
@@ -121,7 +121,7 @@ public class logReplication
         n.AddNode(n1);
         n.Term = 1;
         n.State = NodeState.LEADER;
-        n.CommandReceived(5);
+        n.CommandReceived(0,5);
         n.Commit();
 
         await n.AppendEntries();
@@ -139,7 +139,7 @@ public class logReplication
         n.AddNode(n1);
         n.Term = 1;
         n.State = NodeState.LEADER;
-        n.CommandReceived(5);
+        n.CommandReceived(0,5);
 
         await n.AppendEntries();
 
@@ -156,7 +156,7 @@ public class logReplication
 
         Assert.Equal(0, n.CommittedIndex);
 
-        n.CommandReceived(5);
+        n.CommandReceived(0,5);
         n.Commit();
 
         Assert.Equal(1, n.CommittedIndex);
@@ -223,7 +223,7 @@ public class logReplication
         Node n = new Node(0);
         n.State = NodeState.LEADER;
 
-        n.CommandReceived(3);
+        n.CommandReceived(0,3);
         n.Commit();
 
         Assert.Equal(3, n.StateMachine[0]);
@@ -240,7 +240,7 @@ public class logReplication
 
         n.State = NodeState.LEADER;
         n.Term = 1;
-        n.CommandReceived(3);
+        n.CommandReceived(0,3);
         n.Commit();
 
         Assert.Equal(1, n.CommittedIndex);

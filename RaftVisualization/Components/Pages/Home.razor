@@ -60,15 +60,6 @@
                     </div>
                 </div>
                 <div>
-                    State:
-                    @foreach (var state in node.StateMachine)
-                    {
-                        <div>
-                            Key: @state.Key, Value: @state.Value
-                        </div>
-                    }
-                </div>
-                <div>
                     Commit Index: @node.CommittedIndex
                 </div>
                 <div>
@@ -81,6 +72,15 @@
                         <input type="number" @bind="sendValue"/>
                     </label>
                     <button @onclick="() => SendCommand(node._id, sendKey, sendValue)"> send </button>
+                </div>
+                <div>
+                    State:
+                    @foreach (var state in node.StateMachine)
+                    {
+                        <div>
+                            Key: @state.Key, Value: @state.Value
+                        </div>
+                    }
                 </div>
                 <div>
                     Logs: @foreach ((int term, int command) log in node.Log)
