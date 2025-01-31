@@ -190,9 +190,10 @@ public class Node : INode
             (int term, int committedIndex, bool valid) response;
             if (Log.Count == 0)
             {
-                response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(0,0,0));
+                response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(-1,-1,-1));
                 break;
             }
+            Console.WriteLine($"id: {_id}, term: {Term}, Committed index: {CommittedIndex}, nextValue: {nextValue - 1}, log count: {Log.Count}");
             response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]);
             
             if (response.valid == true)
@@ -231,10 +232,15 @@ public class Node : INode
         }
     }
 
-    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries logValue)
+    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries? logValue)
     {
         Thread.Sleep(networkRespondDelay);
-        if (logValue.term != 0 && logValue.value != 0 && logValue.key != 0)
+        if (logValue is null)
+        {
+            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: false);
+        }
+
+        if (logValue.term != -1)
         {
             Log.Add(logValue);
         }
@@ -292,4 +298,9 @@ public class LogEntries
     public int key { get; private set; }
     public int value { get; private set; }
 } 
+
+public class AppendEntriesResponseData()
+{
+
+}
 

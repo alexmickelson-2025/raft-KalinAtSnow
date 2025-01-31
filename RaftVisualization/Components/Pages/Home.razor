@@ -170,7 +170,6 @@
         StateHasChanged();
         timer = new Timer(_ =>
         {
-            Console.WriteLine("here");
             InvokeAsync(StateHasChanged);
         }, null, 0, 200);
     }
