@@ -61,8 +61,8 @@ public class ElectionTests
         await n.StartElection();
         Assert.Equal(NodeState.LEADER, n.State);
 
-        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),(Arg.Any<int>(), Arg.Any<int>()));
-        n2.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),(Arg.Any<int>(), Arg.Any<int>()));
+        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),Arg.Any<LogEntries>());
+        n2.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),Arg.Any<LogEntries>());
     }
 
     //test 2
@@ -383,7 +383,7 @@ public class ElectionTests
         
         await n.AppendEntries();
 
-        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),Arg.Any<(int,int)>());
+        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),Arg.Any<LogEntries>());
     }
 
     //test 7

@@ -27,8 +27,8 @@ public class VisualizationNode : INode
     public int networkSendDelay { get => ((INode)innerNode).networkSendDelay; set => ((INode)innerNode).networkSendDelay = value; }
     public int nextValue { get => ((INode)innerNode).nextValue; set => ((INode)innerNode).nextValue = value; }
     public int CommittedIndex { get => ((INode)innerNode).CommittedIndex; set => ((INode)innerNode).CommittedIndex = value; }
-    public List<(int term, int command)> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
     public Dictionary<int, int> StateMachine { get => ((INode)innerNode).StateMachine; set => ((INode)innerNode).StateMachine = value; }
+    public List<LogEntries> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
@@ -45,7 +45,7 @@ public class VisualizationNode : INode
         ((INode)innerNode).AppendEntries();
     }
 
-    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, (int term, int command) logValue)
+    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries logValue)
     {
         return ((INode)innerNode).AppendEntryResponse(leaderId, term, CommittedIndex, indexTerm, logValue);
     }

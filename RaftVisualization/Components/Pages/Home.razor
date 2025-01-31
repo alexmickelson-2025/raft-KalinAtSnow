@@ -83,10 +83,10 @@
                     }
                 </div>
                 <div>
-                    Logs: @foreach ((int term, int command) log in node.Log)
+                    Logs: @foreach (LogEntries log in node.Log)
                     {
                         <div>
-                            command: @log.command Term: @log.term
+                            command: @log.key @log.value Term: @log.term
                         </div>
                     }
                 </div>

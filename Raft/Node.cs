@@ -38,7 +38,7 @@ public class Node : INode
     public int networkRespondDelay { get; set; } = 0;
 
     //logs
-    public List<(int term, int command)> Log { get; set; } = new List<(int term, int command)>();
+    public List<LogEntries> Log { get; set; } = new List<LogEntries>();
     public int nextValue { get; set; } = 0;
     public Dictionary<int, int> NextIndexes { get; set; } = new Dictionary<int, int>();
     public int CommittedIndex { get; set; } = 0;
@@ -185,12 +185,12 @@ public class Node : INode
             
             if ( node.Log is null)
             {
-                node.Log = new List<(int term, int command)>();
+                node.Log = new List<LogEntries>();
             }
             (int term, int committedIndex, bool valid) response;
             if (Log.Count == 0)
             {
-                response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue - 1, (0,0));
+                response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(0,0,0));
                 break;
             }
             response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]);
@@ -222,19 +222,19 @@ public class Node : INode
             CommittedIndex++;
             if (StateMachine.ContainsKey(nextValue - 1))
             {
-                StateMachine[nextValue - 1] = Log[nextValue - 1].command;
+                StateMachine[nextValue - 1] = Log[nextValue - 1].value;
             }
             else
             {
-                StateMachine.Add(nextValue - 1, Log[nextValue-1].command);
+                StateMachine.Add(nextValue - 1, Log[nextValue-1].value);
             }
         }
     }
 
-    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, (int term, int command) logValue)
+    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries logValue)
     {
         Thread.Sleep(networkRespondDelay);
-        if (logValue.term != 0 && logValue.command != 0)
+        if (logValue.term != 0 && logValue.value != 0 && logValue.key != 0)
         {
             Log.Add(logValue);
         }
@@ -257,7 +257,7 @@ public class Node : INode
         if (CommittedIndex > this.CommittedIndex)
         {
             this.CommittedIndex = CommittedIndex;
-            StateMachine.Add(CommittedIndex-1 , Log[CommittedIndex - 1].command);
+            StateMachine.Add(CommittedIndex-1 , Log[CommittedIndex - 1].value);
             return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
         }
         
@@ -274,7 +274,7 @@ public class Node : INode
     {
         if (State == NodeState.LEADER)
         {
-            Log.Add((Term, setValue));
+            Log.Add(new LogEntries(Term, setKey, setValue));
             nextValue++;
         } 
     }
