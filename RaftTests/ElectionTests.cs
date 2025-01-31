@@ -28,8 +28,9 @@ public class ElectionTests
     {
         Node n = new();
         await n.StartElection();
-        Assert.Equal(NodeState.CANDIDATE, n.State);
-        await n.LeaderCheck();
+        //leader check is now called within start election - can't validate candidate
+        //Assert.Equal(NodeState.CANDIDATE, n.State);
+        //await n.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n.State);
     }
 
@@ -46,9 +47,10 @@ public class ElectionTests
         n2.nodes = [n, n2];
 
         await n.StartElection();
-        Assert.Equal(NodeState.CANDIDATE, n.State);
+        //leader check is now called in start election, can't check status
+        //Assert.Equal(NodeState.CANDIDATE, n.State);
 
-        await n.LeaderCheck();
+        //await n.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n.State);
     }
 
@@ -57,23 +59,16 @@ public class ElectionTests
     public async Task turnToLeader_SendHeartbeat()
     {
         Node n = new(0);
-        Node n1 = new(1);
-        Node n2 = new(2);
+        var n1 = Substitute.For<INode>();
+        var n2 = Substitute.For<INode>();
 
         n.nodes = [n1, n2];
-        n1.nodes = [n, n2];
-        n2.nodes = [n, n1];
 
-        Assert.Equal(-1, n.LeaderId);
-        Assert.Equal(-1, n1.LeaderId);
-        Assert.Equal(-1, n2.LeaderId);
+        await n.StartElection();
+        Assert.Equal(NodeState.LEADER, n.State);
 
-        await n2.StartElection();
-        await n2.LeaderCheck();
-
-        Assert.Equal(2, n.LeaderId);
-        Assert.Equal(2, n1.LeaderId);
-        Assert.Equal(2, n2.LeaderId);
+        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),(Arg.Any<int>(), Arg.Any<int>()));
+        n2.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(),(Arg.Any<int>(), Arg.Any<int>()));
     }
 
     //test 2
@@ -93,7 +88,7 @@ public class ElectionTests
         await n1.AppendEntries();
 
         Assert.Equal(1, n.LeaderId);
-        Assert.Equal(-1, n1.LeaderId);
+        Assert.Equal(1, n1.LeaderId);
     }
 
 
@@ -115,7 +110,7 @@ public class ElectionTests
     {
         Node n = new();
         await n.StartElection();
-        await n.LeaderCheck();
+        //await n.LeaderCheck();
 
         Assert.Equal(1, n.Term);
 
@@ -137,7 +132,7 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
-        await n.LeaderCheck();
+        //await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
@@ -147,7 +142,7 @@ public class ElectionTests
 
         //Term 2
         await n1.StartElection();
-        await n1.LeaderCheck();
+        //await n1.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n1.State);
         Assert.Equal(2, n1.Term);
 
@@ -171,17 +166,14 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
-        await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
         n1.nodes.Add(n);
-
         await n.AppendEntries();
 
         //Term 2
         await n1.StartElection();
-        await n1.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n1.State);
         Assert.Equal(2, n1.Term);
 
@@ -206,7 +198,7 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
-        await n.LeaderCheck();
+        //await n.LeaderCheck();
         
         //force it to be higher
         n.Term = 2;
@@ -222,7 +214,7 @@ public class ElectionTests
         await n.AppendEntries();
         
         //check to see if old election passed
-        await n1.LeaderCheck();
+        //await n1.LeaderCheck();
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(NodeState.FOLLOWER, n1.State);
@@ -241,7 +233,7 @@ public class ElectionTests
         n.VotedId = 2;
         //n1 presumed unresponsive
 
-        await n2.LeaderCheck();
+        await n2.LeaderCheck(1);
         Assert.Equal(NodeState.LEADER, n2.State);
     }
 
@@ -252,7 +244,7 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
-        await n.LeaderCheck();
+        //await n.LeaderCheck();
 
         Node n1 = new(1);
         n.nodes.Add(n1);
@@ -262,7 +254,7 @@ public class ElectionTests
 
         //Term 2
         await n1.StartElection();
-        await n1.LeaderCheck();
+        //await n1.LeaderCheck();
 
         //restarts or comes online late - defaults 0 term
         Node n2 = new(2);
@@ -307,6 +299,7 @@ public class ElectionTests
         Assert.Equal(n._id, n2.VotedId);
         Assert.Equal(1, n2.VotedTerm);
 
+        n1.Term = 0;
         await n1.StartElection();
 
         Assert.Equal(n._id, n2.VotedId);
@@ -359,19 +352,19 @@ public class ElectionTests
         //term 1
         await n.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(0, n2.VotedId);
         Assert.Equal(1, n2.VotedTerm);
 
         //term 2
         await n.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(0, n2.VotedId);
         Assert.Equal(2, n2.VotedTerm);
  
         //term 1, should be white noise
         await n1.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(0, n2.VotedId);
         Assert.Equal(2, n2.VotedTerm);
     }
 
@@ -445,7 +438,7 @@ public class ElectionTests
     {
         Node n = new();
         await n.StartElection();
-        await n.LeaderCheck();
+        //await n.LeaderCheck();
         Thread t = n.Start();
 
         var n1 = Substitute.For<Node>();

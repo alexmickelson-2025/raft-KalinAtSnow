@@ -19,7 +19,7 @@ public class PausingTests
         n.AddNode(n1);
 
         n.State = NodeState.LEADER;
-        await n.LeaderCheck();
+        //await n.LeaderCheck();
 
         n.Start();
         n.PauseToggle();

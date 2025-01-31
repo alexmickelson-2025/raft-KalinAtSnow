@@ -50,11 +50,6 @@ public class VisualizationNode : INode
         return ((INode)innerNode).AppendEntryResponse(leaderId, term, CommittedIndex, indexTerm, logValue);
     }
 
-    public Task AskForVote(int id, int term)
-    {
-        return ((INode)innerNode).AskForVote(id, term);
-    }
-
     public void BecomeCandidate()
     {
         ((INode)innerNode).BecomeCandidate();
@@ -70,9 +65,9 @@ public class VisualizationNode : INode
         ((INode)innerNode).Commit();
     }
 
-    public void LeaderCheck()
+    public Task LeaderCheck(int votes)
     {
-        ((INode)innerNode).LeaderCheck();
+        return ((INode)innerNode).LeaderCheck(votes);
     }
 
     public void RefreshTimer()
@@ -80,7 +75,7 @@ public class VisualizationNode : INode
         ((INode)innerNode).RefreshTimer();
     }
 
-    public Task RespondVote(int id, int term)
+    public bool RespondVote(int id, int term)
     {
         return ((INode)innerNode).RespondVote(id, term);
     }
@@ -103,11 +98,6 @@ public class VisualizationNode : INode
     Task INode.BecomeCandidate()
     {
         return ((INode)innerNode).BecomeCandidate();
-    }
-
-    Task INode.LeaderCheck()
-    {
-        return ((INode)innerNode).LeaderCheck();
     }
 
     Task INode.StartElection()

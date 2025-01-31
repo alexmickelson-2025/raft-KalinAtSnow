@@ -92,7 +92,7 @@ public class Node : INode
         return t;
     }
 
-    public async Task LeaderCheck()
+    public async Task LeaderCheck(int votes)
     {
 
         foreach (INode node in nodes)
@@ -104,15 +104,13 @@ public class Node : INode
             }
         }
 
-
         var _majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
 
-        int votes = 1;
         foreach (INode node in nodes)
         {
             if (node.VotedTerm >= Term)
             {
-                break;
+                continue;
             }
 
             if (node.VotedId == _id)
@@ -139,31 +137,30 @@ public class Node : INode
     {
         State = NodeState.CANDIDATE;
         VotedId = _id;
+
+        Thread.Sleep(networkSendDelay);
+        int yea = 1;
         foreach (INode node in nodes)
         {
-            await node.AskForVote(_id, Term);
+            if (node.RespondVote(_id, Term))
+            {
+                yea++;
+            }
         }
-        await LeaderCheck();
+
+        await LeaderCheck(yea);
     }
 
-    public async Task RespondVote(int id, int term)
+    public bool RespondVote(int id, int term)
     {
         Thread.Sleep(networkRespondDelay);
         if (term > VotedTerm)
         {
             VotedId = id;
             VotedTerm = term;
+            return true;
         }
-        await Task.CompletedTask;
-    }
-
-    public async Task AskForVote(int id, int term)
-    {
-        Thread.Sleep(networkSendDelay);
-        foreach (INode node in nodes)
-        {
-            await node.RespondVote(id, term);
-        }
+        return false;
     }
 
     public async Task StartElection()
