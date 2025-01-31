@@ -187,13 +187,12 @@ public class Node : INode
             {
                 node.Log = new List<LogEntries>();
             }
-            (int term, int committedIndex, bool valid) response;
+            AppendEntriesResponseData response;
             if (Log.Count == 0)
             {
                 response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(-1,-1,-1));
                 break;
             }
-            Console.WriteLine($"id: {_id}, term: {Term}, Committed index: {CommittedIndex}, nextValue: {nextValue - 1}, log count: {Log.Count}");
             response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]);
             
             if (response.valid == true)
@@ -232,12 +231,12 @@ public class Node : INode
         }
     }
 
-    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries? logValue)
+    public AppendEntriesResponseData AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries? logValue)
     {
         Thread.Sleep(networkRespondDelay);
         if (logValue is null)
         {
-            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: false);
+            return new AppendEntriesResponseData(Term, nextValue, false);
         }
 
         if (logValue.term != -1)
@@ -252,22 +251,22 @@ public class Node : INode
         }
         else
         {
-            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: false);
+            return new AppendEntriesResponseData(Term, nextValue, false);
         }
 
         if (CommittedIndex == 0 && this.CommittedIndex <= CommittedIndex)
         {
-            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
+            return new AppendEntriesResponseData(Term, nextValue, true);
         }
 
         if (CommittedIndex > this.CommittedIndex)
         {
             this.CommittedIndex = CommittedIndex;
             StateMachine.Add(CommittedIndex-1 , Log[CommittedIndex - 1].value);
-            return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
+            return new AppendEntriesResponseData(Term, nextValue, true);
         }
         
-        return (TermNumber: this.Term, LogIndex: this.nextValue, valid: false);
+        return new AppendEntriesResponseData(Term, nextValue, false);
     }
 
     public void RefreshTimer()
@@ -299,8 +298,16 @@ public class LogEntries
     public int value { get; private set; }
 } 
 
-public class AppendEntriesResponseData()
+public class AppendEntriesResponseData
 {
-
+    public AppendEntriesResponseData(int term, int log, bool isValid)
+    {
+        TermNumber = term;
+        LogIndex = log;
+        valid = isValid;
+    }
+    public int TermNumber {get; private set;}
+    public int LogIndex {get; private set; }
+    public bool valid { get; private set; }
 }
 

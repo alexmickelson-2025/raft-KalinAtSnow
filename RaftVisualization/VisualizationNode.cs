@@ -45,7 +45,7 @@ public class VisualizationNode : INode
         ((INode)innerNode).AppendEntries();
     }
 
-    public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries logValue)
+    public AppendEntriesResponseData AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries logValue)
     {
         return ((INode)innerNode).AppendEntryResponse(leaderId, term, CommittedIndex, indexTerm, logValue);
     }

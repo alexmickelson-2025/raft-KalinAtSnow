@@ -22,7 +22,7 @@ namespace Raft
 
         void Commit();
         Task AppendEntries();
-        (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries logValue);
+        AppendEntriesResponseData AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries logValue);
         Task BecomeCandidate();
         Task LeaderCheck(int votes);
         void RefreshTimer();
