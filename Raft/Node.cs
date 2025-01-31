@@ -105,7 +105,7 @@ public class Node : INode
         }
 
 
-        var _majority = Math.Ceiling((double)nodes.Count / 2);
+        var _majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
 
         int votes = 1;
         foreach (INode node in nodes)
@@ -182,7 +182,7 @@ public class Node : INode
     public async Task AppendEntries()
     {
         Thread.Sleep(networkSendDelay);
-        var _majority = Math.Ceiling((double)nodes.Count+1 / 2);
+        var _majority = Math.Ceiling(((double)nodes.Count+1) / 2);
         int success = 1;
         foreach (INode node in nodes)
         {
@@ -220,6 +220,10 @@ public class Node : INode
     {
         if (State == NodeState.LEADER)
         {
+            if (Log.Count < 1)
+            {
+                return;
+            }
             CommittedIndex++;
             if (StateMachine.ContainsKey(nextValue - 1))
             {

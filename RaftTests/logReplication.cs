@@ -399,6 +399,7 @@ public class logReplication
 
         Thread.Sleep(50);
 
+        n.running = false;
         t.Join();
 
         n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<(int, int)>());
