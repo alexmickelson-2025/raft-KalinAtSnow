@@ -283,9 +283,9 @@ public class ElectionTests
 
         for (int i = 0; i < 10; i++)
         {
-            await n.RefreshTimer();
+            n.RefreshTimer();
             int oldValue = n.ElectionTimeout;
-            await n.RefreshTimer();
+            n.RefreshTimer();
             Assert.NotEqual(oldValue, n.ElectionTimeout);
         }
     }
@@ -420,7 +420,7 @@ public class ElectionTests
 
         await n.AppendEntries();
 
-        await n1.Received().RefreshTimer();
+        n1.Received().RefreshTimer();
     }
 
     //test 4

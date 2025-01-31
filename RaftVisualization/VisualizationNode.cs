@@ -28,11 +28,17 @@ public class VisualizationNode : INode
     public int nextValue { get => ((INode)innerNode).nextValue; set => ((INode)innerNode).nextValue = value; }
     public int CommittedIndex { get => ((INode)innerNode).CommittedIndex; set => ((INode)innerNode).CommittedIndex = value; }
     public List<(int term, int command)> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
+    public Dictionary<int, int> StateMachine { get => ((INode)innerNode).StateMachine; set => ((INode)innerNode).StateMachine = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
     int INode._id { get => ((INode)innerNode)._id; set => ((INode)innerNode)._id = value; }
     Dictionary<int, int> INode.NextIndexes { get => ((INode)innerNode).NextIndexes; set => ((INode)innerNode).NextIndexes = value; }
+
+    public void AddNode(INode node)
+    {
+        ((INode)innerNode).AddNode(node);
+    }
 
     public void AppendEntries()
     {
@@ -69,9 +75,9 @@ public class VisualizationNode : INode
         ((INode)innerNode).LeaderCheck();
     }
 
-    public Task RefreshTimer()
+    public void RefreshTimer()
     {
-        return ((INode)innerNode).RefreshTimer();
+        ((INode)innerNode).RefreshTimer();
     }
 
     public Task RespondVote(int id, int term)

@@ -18,6 +18,7 @@ namespace Raft
         int nextValue { get; set; }
         Dictionary<int, int> NextIndexes { get; set; }
         public int CommittedIndex { get; set; }
+        Dictionary<int, int> StateMachine { get; set; }
 
         void Commit();
         Task AppendEntries();
@@ -25,7 +26,8 @@ namespace Raft
         (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, (int term, int command) logValue);
         Task BecomeCandidate();
         Task LeaderCheck();
-        Task RefreshTimer();
+        void RefreshTimer();
+        void AddNode(INode node);
         Task RespondVote(int id, int term);
         void CommandReceived(int setValue);
         Thread Start();

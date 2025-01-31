@@ -59,6 +59,37 @@
                         </div>
                     </div>
                 </div>
+                <div>
+                    State:
+                    @foreach (var state in node.StateMachine)
+                    {
+                        <div>
+                            Key: @state.Key, Value: @state.Value
+                        </div>
+                    }
+                </div>
+                <div>
+                    Commit Index: @node.CommittedIndex
+                </div>
+                <div>
+                    <label>
+                        key
+                        <input type="number" @bind="sendKey"/>
+                    </label>
+                    <label>
+                        value
+                        <input type="number" @bind="sendValue"/>
+                    </label>
+                    <button @onclick="() => SendCommand(node._id, sendKey, sendValue)"> send </button>
+                </div>
+                <div>
+                    Logs: @foreach ((int term, int command) log in node.Log)
+                    {
+                        <div>
+                            command: @log.command Term: @log.term
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     }
@@ -72,6 +103,19 @@
     int electionMultiplier = 1;
     int networkSendDelay = 0;
     int networkRespondDelay;
+    int sendKey;
+    int sendValue;
+
+    public void SendCommand(int nodeId, int key, int value)
+    {
+        foreach (INode node in visualizationNodes)
+        {
+            if (node._id == nodeId)
+            {
+                node.CommandReceived(key);
+            }
+        }
+    }
 
     public void ElectionTimerUpdated(ChangeEventArgs e)
     {
@@ -110,9 +154,12 @@
         var simulation2 = new VisualizationNode(node2);
         var simulation3 = new VisualizationNode(node3);
 
-        node1.nodes = [simulation2, simulation3];
-        node2.nodes = [simulation1, simulation3];
-        node3.nodes = [simulation1, simulation2];
+        node1.AddNode(simulation2);
+        node1.AddNode(simulation3);
+        node2.AddNode(simulation1);
+        node2.AddNode(simulation3);
+        node3.AddNode(simulation1);
+        node3.AddNode(simulation2);
 
         visualizationNodes = [simulation1, simulation2, simulation3];
 

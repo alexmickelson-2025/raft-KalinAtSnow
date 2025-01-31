@@ -352,7 +352,7 @@ public class logReplication
     }
 
 
-            //if index is less, we delete what we have
+            //if leader index is less, followers delete
         //if a follower rejects the AppendEntries RPC, the leader decrements nextIndex and retries the AppendEntries RPC
 
 

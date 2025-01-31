@@ -2,7 +2,7 @@
 
 namespace raftapi;
 
-public class HttpNode: INode
+public class HttpNode
 {
     public int _id { get; }
     public string Url { get; }

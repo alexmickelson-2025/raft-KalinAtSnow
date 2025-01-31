@@ -74,7 +74,7 @@ public class Node : INode
                     {
                         await StartElection();
                     }
-                    await RefreshTimer();
+                    RefreshTimer();
                     if (State == NodeState.CANDIDATE)
                     {
                         await StartElection();
@@ -186,15 +186,20 @@ public class Node : INode
         int success = 1;
         foreach (INode node in nodes)
         {
-            await node.RefreshTimer();
+            node.RefreshTimer();
             
             if ( node.Log is null)
             {
                 node.Log = new List<(int term, int command)>();
             }
-
-            node.Log.Add(Log[nextValue-1]);
-            var response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]);
+            (int term, int committedIndex, bool valid) response;
+            if (Log.Count == 0)
+            {
+                response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue - 1, (0,0));
+                break;
+            }
+            response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]);
+            
             if (response.valid == true)
             {
                 success++;
@@ -230,7 +235,11 @@ public class Node : INode
     public (int TermNumber, int LogIndex, bool valid) AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, (int term, int command) logValue)
     {
         Thread.Sleep(networkRespondDelay);
-
+        if (logValue.term != 0 && logValue.command != 0)
+        {
+            Log.Add(logValue);
+        }
+        
         if (term > Term)
         {
             LeaderId = leaderId;
@@ -243,7 +252,6 @@ public class Node : INode
 
         if (CommittedIndex == 0 && this.CommittedIndex <= CommittedIndex)
         {
-            
             return (TermNumber: this.Term, LogIndex: this.nextValue, valid: true);
         }
 
@@ -257,10 +265,10 @@ public class Node : INode
         return (TermNumber: this.Term, LogIndex: this.nextValue, valid: false);
     }
 
-    public async Task RefreshTimer()
+    public void RefreshTimer()
     {
         ElectionTimeout = _random.Next(150, 300) * electionMultiplier;
-        await Task.CompletedTask;
+        
     }
 
     public void CommandReceived(int setValue)
