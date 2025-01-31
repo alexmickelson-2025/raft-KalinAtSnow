@@ -106,7 +106,7 @@ public class logReplication
         n.CommandReceived(0,5);
         await n.AppendEntries();
 
-        n1.Received().AppendEntryResponse(n._id, n.Term, 0, 0, Arg.Any<LogEntries>());
+        n1.Received().AppendEntryResponse(Arg.Is<AppendEntriesDTO>(dto => dto.CommittedIndex == 0));
     }
     
     //test 7
@@ -204,10 +204,10 @@ public class logReplication
     {
         Node n = new Node();
 
-        var result = n.AppendEntryResponse(0,0,0, 0, Arg.Any<LogEntries>());
+        var result = n.AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
 
-       // Assert.Equal(0, result.TermNumber);
-       // Assert.Equal(0, result.LogIndex);
+        Assert.Equal(0, result.TermNumber);
+        Assert.Equal(0, result.LogIndex);
     }
 
     //when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
@@ -256,8 +256,7 @@ public class logReplication
 
         n.Log.Add(new LogEntries(5,0,2));
         n.CommittedIndex = 1;
-
-        var response = n.AppendEntryResponse(1,1,0, Arg.Any<int>(), Arg.Any<LogEntries>());
+        var response = n.AppendEntryResponse(new AppendEntriesDTO(1,1,0, Arg.Any<int>(), Arg.Any<LogEntries>()));
 
         Assert.False(response.valid);
     }
@@ -270,7 +269,7 @@ public class logReplication
         n.Log.Add(new LogEntries(5,0, 2));
         n.Term = 5;
 
-        var response = n.AppendEntryResponse(1, 1, 0, Arg.Any<int>(), Arg.Any<LogEntries>());
+        var response = n.AppendEntryResponse(new AppendEntriesDTO(1, 1, 0, Arg.Any<int>(), Arg.Any<LogEntries>()));
 
         Assert.False(response.valid);
     }
@@ -294,7 +293,7 @@ public class logReplication
         n.nextValue++;
         await n.AppendEntries();
 
-        n1.Received().AppendEntryResponse(Arg.Any<int>(), 2, Arg.Any<int>(), 1, Arg.Any<LogEntries>());
+        n1.Received().AppendEntryResponse(Arg.Is<AppendEntriesDTO>(dto => dto.term == 2 && dto.indexTerm == 1));
     }
 
 
@@ -307,7 +306,7 @@ public class logReplication
         n.Log.Add(new LogEntries(2,0,6)); 
         n.Term = 2;
 
-        var badTerm = n.AppendEntryResponse(0, 1, 0, 1, new LogEntries(0,0,0));
+        var badTerm = n.AppendEntryResponse(new AppendEntriesDTO(0, 1, 0, 1, new LogEntries(0,0,0)));
         Assert.False(badTerm.valid);
     }
 
@@ -400,7 +399,7 @@ public class logReplication
         n.running = false;
         t.Join();
 
-        n1.Received().AppendEntryResponse(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<LogEntries>());
+        n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
     }
 
 

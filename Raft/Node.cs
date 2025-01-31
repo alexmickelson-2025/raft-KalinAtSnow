@@ -181,8 +181,6 @@ public class Node : INode
         int success = 1;
         foreach (INode node in nodes)
         {
-            node.RefreshTimer();
-            
             if ( node.Log is null)
             {
                 node.Log = new List<LogEntries>();
@@ -190,10 +188,10 @@ public class Node : INode
             AppendEntriesResponseData response;
             if (Log.Count == 0)
             {
-                response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(-1,-1,-1));
+                response = node.AppendEntryResponse(new AppendEntriesDTO(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(-1,-1,-1)));
                 break;
             }
-            response = node.AppendEntryResponse(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]);
+            response = node.AppendEntryResponse(new AppendEntriesDTO(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]));
             
             if (response.valid == true)
             {
@@ -231,23 +229,24 @@ public class Node : INode
         }
     }
 
-    public AppendEntriesResponseData AppendEntryResponse(int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries? logValue)
+    public AppendEntriesResponseData AppendEntryResponse(AppendEntriesDTO dto)
     {
         Thread.Sleep(networkRespondDelay);
-        if (logValue is null)
+        RefreshTimer();
+        if (dto.logValue is null)
         {
             return new AppendEntriesResponseData(Term, nextValue, false);
         }
 
-        if (logValue.term != -1)
+        if (dto.logValue.term != -1)
         {
-            Log.Add(logValue);
+            Log.Add(dto.logValue);
         }
         
-        if (term > Term)
+        if (dto.term > Term)
         {
-            LeaderId = leaderId;
-            Term = term;
+            LeaderId = dto.leaderId;
+            Term = dto.term;
         }
         else
         {
@@ -298,7 +297,7 @@ public class LogEntries
     public int value { get; private set; }
 } 
 
-public class AppendEntriesResponseData
+public record AppendEntriesResponseData
 {
     public AppendEntriesResponseData(int term, int log, bool isValid)
     {
@@ -310,4 +309,6 @@ public class AppendEntriesResponseData
     public int LogIndex {get; private set; }
     public bool valid { get; private set; }
 }
+
+public record AppendEntriesDTO (int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries? logValue);
 
