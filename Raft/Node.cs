@@ -11,6 +11,14 @@ public class Node : INode
         _id = 0;
     }
 
+    public Node(INode[] nodes)
+    {
+        foreach (INode node in nodes)
+        {
+            AddNode(node);
+        }
+    }
+
     public Node(int id)
     {
         _id = id;
@@ -91,6 +99,11 @@ public class Node : INode
         return t;
     }
 
+    public async Task RequestVote()
+    {
+
+    }
+
     public async Task LeaderCheck(int votes)
     {
         foreach (INode node in nodes)
@@ -140,7 +153,7 @@ public class Node : INode
         int yea = 1;
         foreach (INode node in nodes)
         {
-            if (node.RespondVote(_id, Term))
+            if (await node.RespondVote(new VoteResponseData(_id, Term)))
             {
                 yea++;
             }
@@ -149,13 +162,13 @@ public class Node : INode
         await LeaderCheck(yea);
     }
 
-    public bool RespondVote(int id, int term)
+    public async Task<bool> RespondVote(VoteResponseData voteData)
     {
         Thread.Sleep(networkRespondDelay);
-        if (term > VotedTerm)
+        if (voteData.term > VotedTerm)
         {
-            VotedId = id;
-            VotedTerm = term;
+            VotedId = voteData.id;
+            VotedTerm = voteData.term;
             return true;
         }
         return false;
@@ -188,10 +201,10 @@ public class Node : INode
             AppendEntriesResponseData response;
             if (Log.Count == 0)
             {
-                response = node.AppendEntryResponse(new AppendEntriesDTO(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(-1,-1,-1)));
+                response = await node.AppendEntryResponse(new AppendEntriesDTO(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(-1,-1,-1)));
                 break;
             }
-            response = node.AppendEntryResponse(new AppendEntriesDTO(_id, Term, CommittedIndex, nextValue-1, Log[nextValue-1]));
+            response = await node.AppendEntryResponse(new AppendEntriesDTO(_id, Term, CommittedIndex, nextValue - 1, Log[nextValue - 1]));
             
             if (response.valid == true)
             {
@@ -229,7 +242,7 @@ public class Node : INode
         }
     }
 
-    public AppendEntriesResponseData AppendEntryResponse(AppendEntriesDTO dto)
+    public async Task<AppendEntriesResponseData> AppendEntryResponse(AppendEntriesDTO dto)
     {
         Thread.Sleep(networkRespondDelay);
         RefreshTimer();
@@ -274,13 +287,13 @@ public class Node : INode
         
     }
 
-    public void CommandReceived(int setKey, int setValue)
+    public async Task CommandReceived(ClientCommandData commandData)
     {
         if (State == NodeState.LEADER)
         {
-            Log.Add(new LogEntries(Term, setKey, setValue));
+            Log.Add(new LogEntries(Term, commandData.setKey, commandData.setValue));
             nextValue++;
-        } 
+        }
     }
 }
 
@@ -311,4 +324,8 @@ public record AppendEntriesResponseData
 }
 
 public record AppendEntriesDTO (int leaderId, int term, int CommittedIndex, int indexTerm, LogEntries? logValue);
+public record VoteResponseData(int id, int term);
+public record ClientCommandData(int setKey, int setValue);
+
+
 

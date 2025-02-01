@@ -22,14 +22,15 @@ namespace Raft
 
         void Commit();
         Task AppendEntries();
-        AppendEntriesResponseData AppendEntryResponse(AppendEntriesDTO dto);
+        Task<AppendEntriesResponseData> AppendEntryResponse(AppendEntriesDTO dto);
         Task BecomeCandidate();
         Task LeaderCheck(int votes);
         void RefreshTimer();
         void AddNode(INode node);
-        bool RespondVote(int id, int term);
-        void CommandReceived(int setKey, int setValue);
+        Task<bool> RespondVote(VoteResponseData voteData);
+        Task CommandReceived(ClientCommandData commandData);
         Thread Start();
+        Task RequestVote();
         Task StartElection();
     }
 }
