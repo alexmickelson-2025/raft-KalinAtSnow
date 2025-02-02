@@ -26,7 +26,6 @@
 
 using Raft;
 using raftapi;
-using System.Text.Json;
  
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
@@ -39,19 +38,11 @@ var nodeIntervalScalarRaw = Environment.GetEnvironmentVariable("NODE_INTERVAL_SC
 var serviceName = "Node" + nodeId;
 
 var app = builder.Build();
- 
-var logger = app.Services.GetService<ILogger<Program>>();
-logger.LogInformation("Node ID {name}", nodeId);
-logger.LogInformation("Other nodes environment config: {}", otherNodesRaw);
- 
- 
+
 INode[] otherNodes = (INode[])otherNodesRaw
   .Split(";")
   .Select(s => new HttpRpcOtherNode(int.Parse(s.Split(",")[0]), s.Split(",")[1]))
   .ToArray();
- 
- 
-logger.LogInformation("other nodes {nodes}", JsonSerializer.Serialize(otherNodes));
  
  
 var node = new Node(otherNodes)
@@ -82,25 +73,21 @@ app.MapGet("/nodeData", () =>
  
 app.MapPost("/request/appendEntries", async () => //AppendEntriesData request) =>
 {
-        logger.LogInformation("received append entries request ");//  {request}", request);
-        await node.AppendEntries(); // request);
+        await node.AppendEntries(new AppendEntriesData(node.Term, node.nextValue, true)); // request);
 });
  
 app.MapPost("/request/vote", async ()=> //VoteRequestData request) =>
 {
-  logger.LogInformation("received vote request");// {request}", request);
 await node.RequestVote();// request);
 });
  
 app.MapPost("/response/appendEntries", async (AppendEntriesDTO response) =>
 {
-  logger.LogInformation("received append entries response {response}", response);
   await node.AppendEntryResponse(response);
 });
  
 app.MapPost("/response/vote", async (VoteResponseData response) =>
 {
-  logger.LogInformation("received vote response {response}", response);
   await node.RespondVote(response);
 });
  
