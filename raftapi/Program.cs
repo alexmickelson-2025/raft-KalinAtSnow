@@ -45,7 +45,7 @@ logger.LogInformation("Node ID {name}", nodeId);
 logger.LogInformation("Other nodes environment config: {}", otherNodesRaw);
  
  
-INode[] otherNodes = otherNodesRaw
+INode[] otherNodes = (INode[])otherNodesRaw
   .Split(";")
   .Select(s => new HttpRpcOtherNode(int.Parse(s.Split(",")[0]), s.Split(",")[1]))
   .ToArray();
@@ -59,7 +59,7 @@ var node = new Node(otherNodes)
   _id = int.Parse(nodeId),
 };
  
-Node.NodeIntervalScalar = double.Parse(nodeIntervalScalarRaw);
+node.NodeIntervalScalar = double.Parse(nodeIntervalScalarRaw);
  
 node.Start();
  
@@ -69,14 +69,14 @@ app.MapGet("/nodeData", () =>
 {
   return new NodeData(
     Id: node._id,
-    Status: node.State,
+    Status: node.running,
     ElectionTimeout: node.ElectionTimeout,
     Term: node.Term,
     CurrentTermLeader: node.LeaderId,
     CommittedEntryIndex: node.CommittedIndex,
     Log: node.Log,
     State: node.State,
-    NodeIntervalScalar: Node.NodeIntervalScalar
+    NodeIntervalScalar: node.NodeIntervalScalar
   );
 });
  

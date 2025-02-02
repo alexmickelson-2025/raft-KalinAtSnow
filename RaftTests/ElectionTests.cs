@@ -61,8 +61,8 @@ public class ElectionTests
         await n.StartElection();
         Assert.Equal(NodeState.LEADER, n.State);
 
-        n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
-        n2.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
+        await n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
+        await n2.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
     }
 
     //test 2
@@ -79,7 +79,8 @@ public class ElectionTests
         Assert.Equal(-1, n1.LeaderId);
 
         await n1.StartElection();
-        await n1.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1,1,false));
 
         Assert.Equal(1, n.LeaderId);
         Assert.Equal(1, n1.LeaderId);
@@ -113,7 +114,8 @@ public class ElectionTests
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        await n.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
         Assert.Equal(1, n1.Term);
     }
 
@@ -129,7 +131,8 @@ public class ElectionTests
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        await n.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
 
         //Term 2
         await n1.StartElection();
@@ -160,7 +163,8 @@ public class ElectionTests
         Node n1 = new(1);
         n.nodes.Add(n1);
         n1.nodes.Add(n);
-        await n.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
 
         //Term 2
         await n1.StartElection();
@@ -175,7 +179,8 @@ public class ElectionTests
 
         //election gives it Term 1 (less than current) heartbeat occurs - shouldn't go through and reverts with current term (2)
         await n2.StartElection();
-        await n1.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
         Assert.Equal(2, n2.Term);
         Assert.Equal(NodeState.FOLLOWER, n2.State);
         Assert.Equal(NodeState.LEADER, n1.State);
@@ -200,7 +205,8 @@ public class ElectionTests
         await n1.StartElection();
 
         //Heartbeat from n at term 2
-        await n.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(NodeState.FOLLOWER, n1.State);
@@ -235,7 +241,8 @@ public class ElectionTests
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        await n.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
 
         //Term 2
         await n1.StartElection();
@@ -364,7 +371,8 @@ public class ElectionTests
         n1.nodes.Add(n);
 
         n1.State = NodeState.LEADER;
-        await n1.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
 
         //current term that its applying for
         Assert.Equal(1, n.Term);
@@ -380,8 +388,9 @@ public class ElectionTests
         var n1 = Substitute.For<Node>();
 
         n.nodes.Add(n1);
-        
-        await n.AppendEntries();
+
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
 
         n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
     }
@@ -395,7 +404,8 @@ public class ElectionTests
 
         n.nodes.Add(n1);
 
-        await n.AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
 
         n1.Received().RefreshTimer();
     }
@@ -433,7 +443,8 @@ public class ElectionTests
         n.running = false;
         t.Join();
 
-        await n1.Received(2).AppendEntries();
+        //TODO: update this
+        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
     }
 
     //test 16

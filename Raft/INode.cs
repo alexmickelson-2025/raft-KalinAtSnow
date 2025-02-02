@@ -19,10 +19,11 @@ namespace Raft
         Dictionary<int, int> NextIndexes { get; set; }
         public int CommittedIndex { get; set; }
         Dictionary<int, int> StateMachine { get; set; }
+        double NodeIntervalScalar { get; set; }
 
         void Commit();
-        Task AppendEntries();
-        Task<AppendEntriesResponseData> AppendEntryResponse(AppendEntriesDTO dto);
+        Task AppendEntries(AppendEntriesData data);
+        Task AppendEntryResponse(AppendEntriesDTO dto);
         Task BecomeCandidate();
         Task LeaderCheck(int votes);
         void RefreshTimer();

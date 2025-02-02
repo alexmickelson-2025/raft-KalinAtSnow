@@ -29,6 +29,7 @@ public class VisualizationNode : INode
     public int CommittedIndex { get => ((INode)innerNode).CommittedIndex; set => ((INode)innerNode).CommittedIndex = value; }
     public Dictionary<int, int> StateMachine { get => ((INode)innerNode).StateMachine; set => ((INode)innerNode).StateMachine = value; }
     public List<LogEntries> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
+    public double NodeIntervalScalar { get => ((INode)innerNode).NodeIntervalScalar; set => ((INode)innerNode).NodeIntervalScalar = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
@@ -40,12 +41,12 @@ public class VisualizationNode : INode
         ((INode)innerNode).AddNode(node);
     }
 
-    public void AppendEntries()
+    public Task AppendEntries(AppendEntriesData data)
     {
-        ((INode)innerNode).AppendEntries();
+        return ((INode)innerNode).AppendEntries(data);
     }
 
-    public AppendEntriesResponseData AppendEntryResponse(AppendEntriesDTO dto)
+    public Task AppendEntryResponse(AppendEntriesDTO dto)
     {
         return ((INode)innerNode).AppendEntryResponse(dto);
     }
@@ -55,9 +56,9 @@ public class VisualizationNode : INode
         ((INode)innerNode).BecomeCandidate();
     }
 
-    public void CommandReceived(int setKey, int setValue)
+    public Task CommandReceived(ClientCommandData commandData)
     {
-        ((INode)innerNode).CommandReceived(setKey, setValue);
+        return ((INode)innerNode).CommandReceived(commandData);
     }
 
     public void Commit()
@@ -75,9 +76,14 @@ public class VisualizationNode : INode
         ((INode)innerNode).RefreshTimer();
     }
 
-    public bool RespondVote(int id, int term)
+    public Task RequestVote()
     {
-        return ((INode)innerNode).RespondVote(id, term);
+        return ((INode)innerNode).RequestVote();
+    }
+
+    public Task<bool> RespondVote(VoteResponseData voteData)
+    {
+        return ((INode)innerNode).RespondVote(voteData);
     }
 
     public Thread Start()
@@ -88,11 +94,6 @@ public class VisualizationNode : INode
     public void StartElection()
     {
         ((INode)innerNode).StartElection();
-    }
-
-    Task INode.AppendEntries()
-    {
-        return ((INode)innerNode).AppendEntries();
     }
 
     Task INode.BecomeCandidate()

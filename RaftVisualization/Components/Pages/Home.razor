@@ -112,7 +112,7 @@
         {
             if (node._id == nodeId)
             {
-                node.CommandReceived(key, value);
+                node.CommandReceived(new ClientCommandData(key, value));
             }
         }
     }
