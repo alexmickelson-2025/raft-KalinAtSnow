@@ -101,7 +101,7 @@ public class Node : INode
 
     public async Task RequestVote()
     {
-
+        await Task.CompletedTask;
     }
 
     public async Task LeaderCheck(int votes)
@@ -140,6 +140,7 @@ public class Node : INode
                 node.nextValue = nextValue + 1;
             }
         }
+        await Task.CompletedTask;
     }
 
     public async Task BecomeCandidate()
@@ -169,6 +170,7 @@ public class Node : INode
             VotedTerm = voteData.term;
             return true;
         }
+        await Task.CompletedTask;
         return false;
     }
 
@@ -288,6 +290,7 @@ public class Node : INode
             Log.Add(new LogEntries(Term, commandData.setKey, commandData.setValue));
             nextValue++;
         }
+        await Task.CompletedTask;
     }
 }
 
