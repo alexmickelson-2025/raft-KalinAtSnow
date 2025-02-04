@@ -32,16 +32,15 @@ public class ElectionTests
     }
 
     //test 8 multi
+    //TODO update this test to not use node.___ for validation
     [Fact]
     public async Task givenThreeNodeElection_TurnLeaderWithThreeVotes()
     {
         Node n = new();
-        Node n1 = new();
-        Node n2 = new();
+        var n1 = Substitute.For<INode>();
+        var n2 = Substitute.For<INode>();
 
         n.nodes = [n1, n2];
-        n1.nodes = [n, n2];
-        n2.nodes = [n, n2];
 
         await n.StartElection();
 
@@ -61,31 +60,24 @@ public class ElectionTests
         await n.StartElection();
         Assert.Equal(NodeState.LEADER, n.State);
 
-        await n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
-        await n2.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
+        await n1.Received().AppendEntries(Arg.Any<AppendEntriesData>());
+        await n2.Received().AppendEntries(Arg.Any<AppendEntriesData>());
     }
 
     //test 2
     [Fact]
     public async Task givenAppendEntryRecieved_UnderstandTheSenderAsLeaderIfTermIsHigher()
     {
-        Node n = new(0);
-        Node n1 = new(1);
+        //node acting as a follower
+        Node n = new(1);
 
-        n.nodes = [n1];
-        n1.nodes = [n];
+        Assert.Equal(0, n.LeaderId);
 
-        Assert.Equal(-1, n.LeaderId);
-        Assert.Equal(-1, n1.LeaderId);
+        //term 3, leader 2
+        await n.AppendEntries(new AppendEntriesData(3,2));
 
-        await n1.StartElection();
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1,1,false));
-
-        Assert.Equal(1, n.LeaderId);
-        Assert.Equal(1, n1.LeaderId);
+        Assert.Equal(2, n.LeaderId);
     }
-
 
     //test 6
     [Fact]
@@ -114,12 +106,12 @@ public class ElectionTests
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(n.Term,n.Id));
         Assert.Equal(1, n1.Term);
     }
 
     //test 12
+    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task candidateStartsElectionWtihHigherTermLeaderPresent_RevertsToFollower()
     {
@@ -132,7 +124,7 @@ public class ElectionTests
         n1.nodes.Add(n);
 
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1,-1));
 
         //Term 2
         await n1.StartElection();
@@ -164,7 +156,7 @@ public class ElectionTests
         n.nodes.Add(n1);
         n1.nodes.Add(n);
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1,-1));
 
         //Term 2
         await n1.StartElection();
@@ -180,7 +172,7 @@ public class ElectionTests
         //election gives it Term 1 (less than current) heartbeat occurs - shouldn't go through and reverts with current term (2)
         await n2.StartElection();
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1,-1));
         Assert.Equal(2, n2.Term);
         Assert.Equal(NodeState.FOLLOWER, n2.State);
         Assert.Equal(NodeState.LEADER, n1.State);
@@ -206,7 +198,7 @@ public class ElectionTests
 
         //Heartbeat from n at term 2
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1,-1));
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(NodeState.FOLLOWER, n1.State);
@@ -242,7 +234,7 @@ public class ElectionTests
         n1.nodes.Add(n);
 
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1, -1));
 
         //Term 2
         await n1.StartElection();
@@ -260,7 +252,7 @@ public class ElectionTests
 
     //test 5
     [Fact]
-    public async Task RandomValuesForElectionTimeouts()
+    public void RandomValuesForElectionTimeouts()
     {
         Node n = new();
 
@@ -287,13 +279,13 @@ public class ElectionTests
 
         await n.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(n.Id, n2.VotedId);
         Assert.Equal(1, n2.VotedTerm);
 
         n1.Term = 0;
         await n1.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(n.Id, n2.VotedId);
         Assert.Equal(1, n2.VotedTerm);
     }
 
@@ -312,19 +304,19 @@ public class ElectionTests
         //term 1
         await n.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(n.Id, n2.VotedId);
         Assert.Equal(1, n2.VotedTerm);
 
         //term 1
         await n1.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(n.Id, n2.VotedId);
         Assert.Equal(1, n2.VotedTerm);
 
         //term 2
         await n.StartElection();
 
-        Assert.Equal(n._id, n2.VotedId);
+        Assert.Equal(n.Id, n2.VotedId);
         Assert.Equal(2, n2.VotedTerm);
     }
 
@@ -372,7 +364,7 @@ public class ElectionTests
 
         n1.State = NodeState.LEADER;
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1, -1));
 
         //current term that its applying for
         Assert.Equal(1, n.Term);
@@ -389,10 +381,9 @@ public class ElectionTests
 
         n.nodes.Add(n1);
 
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1, -1));
 
-        n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
+        await n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
     }
 
     //test 7
@@ -405,7 +396,7 @@ public class ElectionTests
         n.nodes.Add(n1);
 
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1, -1));
 
         n1.Received().RefreshTimer();
     }
@@ -444,7 +435,7 @@ public class ElectionTests
         t.Join();
 
         //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(1, 1, false));
+        await n1.AppendEntries(new AppendEntriesData(-1, -1));
     }
 
     //test 16

@@ -30,6 +30,6 @@ public class PausingTests
 
         Thread.Sleep(400);
 
-        n1.DidNotReceive().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
+        await n1.DidNotReceive().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
     }
 }

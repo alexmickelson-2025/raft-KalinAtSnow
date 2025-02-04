@@ -12,7 +12,7 @@ public class VisualizationNode : INode
         innerNode = node;
     }
 
-    public int _id => innerNode._id;
+    public int _id => innerNode.Id;
 
     public int? LeaderId => ((INode)innerNode).LeaderId;
 
@@ -33,7 +33,7 @@ public class VisualizationNode : INode
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
-    int INode._id { get => ((INode)innerNode)._id; set => ((INode)innerNode)._id = value; }
+    int INode.Id { get => ((INode)innerNode).Id; set => ((INode)innerNode).Id = value; }
     Dictionary<int, int> INode.NextIndexes { get => ((INode)innerNode).NextIndexes; set => ((INode)innerNode).NextIndexes = value; }
 
     public void AddNode(INode node)

@@ -47,7 +47,7 @@ INode[] otherNodes = (INode[])otherNodesRaw
  
 var node = new Node(otherNodes)
 {
-  _id = int.Parse(nodeId),
+  Id = int.Parse(nodeId),
 };
  
 node.NodeIntervalScalar = double.Parse(nodeIntervalScalarRaw);
@@ -59,7 +59,7 @@ app.MapGet("/health", () => "healthy");
 app.MapGet("/nodeData", () =>
 {
   return new NodeData(
-    Id: node._id,
+    Id: node.Id,
     Status: node.running,
     ElectionTimeout: node.ElectionTimeout,
     Term: node.Term,
@@ -73,7 +73,7 @@ app.MapGet("/nodeData", () =>
  
 app.MapPost("/request/appendEntries", async () => //AppendEntriesData request) =>
 {
-        await node.AppendEntries(new AppendEntriesData(node.Term, node.nextValue, true)); // request);
+        await node.AppendEntries(new AppendEntriesData(node.Term)); // request);
 });
  
 app.MapPost("/request/vote", async ()=> //VoteRequestData request) =>

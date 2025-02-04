@@ -110,7 +110,7 @@
     {
         foreach (INode node in visualizationNodes)
         {
-            if (node._id == nodeId)
+            if (node.Id == nodeId)
             {
                 node.CommandReceived(new ClientCommandData(key, value));
             }

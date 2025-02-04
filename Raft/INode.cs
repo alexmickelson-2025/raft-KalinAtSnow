@@ -10,7 +10,7 @@ namespace Raft
         int Term { get; set; }
         int ElectionTimeout { get; set; }
         bool running { get; set; }
-        int _id { get; set; }
+        int Id { get; set; }
         int electionMultiplier { get; set; }
          int networkRespondDelay { get; set; }
          int networkSendDelay { get; set; }

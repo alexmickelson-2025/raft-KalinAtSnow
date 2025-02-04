@@ -6,7 +6,7 @@ public class Node : INode
 {
     public Node()
     {
-        _id = 0;
+        Id = 0;
     }
 
     public Node(INode[] nodes)
@@ -19,7 +19,7 @@ public class Node : INode
 
     public Node(int id)
     {
-        _id = id;
+        Id = id;
         _random = new Random();
         ElectionTimeout = _random.Next(151, 300) * electionMultiplier;
     }
@@ -27,7 +27,7 @@ public class Node : INode
     //global
     private Random _random = new Random();
     public List<INode> nodes = new List<INode>();
-    public int _id { get; set; }
+    public int Id { get; set; }
     public NodeState State { get; set; } = NodeState.FOLLOWER;
     public bool running { get; set; } = true;
     public double NodeIntervalScalar { get; set; } = 1;
@@ -36,7 +36,7 @@ public class Node : INode
     public int Term { get; set; } = 0;
     public int VotedId { get; set; } = -1;
     public int VotedTerm { get; set; } = -1;
-    public int LeaderId { get; private set; } = -1;
+    public int LeaderId { get; set; }
     public int ElectionTimeout { get; set; } = 0;
 
     //running
@@ -59,7 +59,7 @@ public class Node : INode
     public void AddNode(INode node)
     {
         nodes.Add(node);
-        NextIndexes.Add(node._id, node.nextValue);
+        NextIndexes.Add(node.Id, node.nextValue);
     }
 
     public Thread Start()
@@ -68,7 +68,7 @@ public class Node : INode
         {
             while (running)
             {
-                if (LeaderId != _id)
+                if (LeaderId != Id)
                 {
                     State = NodeState.FOLLOWER;
                 }
@@ -88,8 +88,10 @@ public class Node : INode
                 }
                 if (State == NodeState.LEADER)
                 {
-                    //TODO: fix this
-                    await AppendEntries(new AppendEntriesData(0,0,false));
+                    foreach (INode node in nodes)
+                    {
+                        await node.AppendEntries(new AppendEntriesData(Term, Id));
+                    }
                 }
 
             }
@@ -108,7 +110,7 @@ public class Node : INode
     {
         foreach (INode node in nodes)
         {
-            if (node._id == LeaderId && node.Term >= Term)
+            if (node.Id == LeaderId && node.Term >= Term)
             {
                 State = NodeState.FOLLOWER;
                 return;
@@ -124,7 +126,7 @@ public class Node : INode
                 continue;
             }
 
-            if (node.VotedId == _id)
+            if (node.VotedId == Id)
             {
                 votes++;
             }
@@ -133,11 +135,11 @@ public class Node : INode
         if (votes >= _majority)
         {
             State = NodeState.LEADER;
-            LeaderId = _id;
+            LeaderId = Id;
 
             foreach (INode node in nodes)
             {
-                node.nextValue = nextValue + 1;
+                await node.AppendEntries(new AppendEntriesData(Term, Id));
             }
         }
         await Task.CompletedTask;
@@ -146,13 +148,13 @@ public class Node : INode
     public async Task BecomeCandidate()
     {
         State = NodeState.CANDIDATE;
-        VotedId = _id;
+        VotedId = Id;
 
         Thread.Sleep(networkSendDelay);
         int yea = 1;
         foreach (INode node in nodes)
         {
-            if (await node.RespondVote(new VoteResponseData(_id, Term)))
+            if (await node.RespondVote(new VoteResponseData(Id, Term)))
             {
                 yea++;
             }
@@ -188,9 +190,13 @@ public class Node : INode
     }
 
 
-    // implemented as a follower - leader send this as a follower
+    // implemented as a follower - leader send this to a follower
     public async Task AppendEntries(AppendEntriesData appendEntriesData)
     {
+        LeaderId = appendEntriesData.LeaderId;
+        Term = appendEntriesData.Term;
+        await Task.CompletedTask;
+        /*
         Thread.Sleep(networkSendDelay);
         var _majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
         int success = 1;
@@ -212,6 +218,7 @@ public class Node : INode
         {
             Commit();
         }
+        */
     }
 
     public void Commit()
@@ -235,9 +242,10 @@ public class Node : INode
     }
 
     //implemnt this as the leader
-
     public async Task AppendEntryResponse(AppendEntriesDTO dto)
     {
+        await Task.CompletedTask;
+        /*
         Thread.Sleep(networkRespondDelay);
         RefreshTimer();
         foreach (INode node in nodes)
@@ -279,6 +287,7 @@ public class Node : INode
 
             await node.AppendEntries(new AppendEntriesData(Term, nextValue, false));
         }
+        */
     }
 
     public void RefreshTimer()
