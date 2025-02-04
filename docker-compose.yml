@@ -38,3 +38,18 @@ services:
       - OTHER_NODES=1,http://node1:8080;2,http://node2:8080
       - NODE_INTERVAL_SCALAR=50
     command: dotnet watch --project raftapi
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    user: 1000:100
+    ports:
+      - 5000:8080
+    volumes:
+      - ./:/app
+    environment:
+      - NODE_ID=3
+      - OTHER_NODES=1,http://node1:8080;2,http://node2:8080
+      - NODE_INTERVAL_SCALAR=50
+    command: dotnet watch --project RaftClient

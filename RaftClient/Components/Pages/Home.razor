@@ -1,0 +1,17 @@
+﻿@rendermode InteractiveServer
+@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+@foreach (string url in Urls)
+{
+<h1>@Urls</h1>   
+}
+
+@code{
+    string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(','); 
+}

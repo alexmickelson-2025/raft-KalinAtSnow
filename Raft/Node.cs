@@ -187,6 +187,8 @@ public class Node : INode
             await BecomeCandidate();
     }
 
+
+    // implemented as a follower - leader send this as a follower
     public async Task AppendEntries(AppendEntriesData appendEntriesData)
     {
         Thread.Sleep(networkSendDelay);
@@ -231,6 +233,8 @@ public class Node : INode
             }
         }
     }
+
+    //implemnt this as the leader
 
     public async Task AppendEntryResponse(AppendEntriesDTO dto)
     {
