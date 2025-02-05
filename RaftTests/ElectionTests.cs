@@ -272,7 +272,7 @@ public class ElectionTests
 
         n.AddNode(n1);
 
-        await n.RequestVote(new VoteResponseData(1,0));
+        await n.RequestVote(new VoteResponseData(1,1));
         await n1.Received().RespondVote(new VoteRequestData(false, n1.Id,1));
     }
 
