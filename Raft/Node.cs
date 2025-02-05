@@ -108,6 +108,7 @@ public class Node : INode
         if (voteRequestData.Term > Term)
         {
             VotedId = voteRequestData.LeaderId;
+            VotedTerm = voteRequestData.Term;
             LeaderId = voteRequestData.LeaderId;
             Term = voteRequestData.Term;
             foreach (INode node in nodes)
@@ -233,7 +234,7 @@ public class Node : INode
 
     // implemented as a follower - leader send this to a follower
     public async Task AppendEntries(AppendEntriesData appendEntriesData)
-    {
+    { 
         LeaderId = appendEntriesData.LeaderId;
         Term = appendEntriesData.Term;
         await Task.CompletedTask;

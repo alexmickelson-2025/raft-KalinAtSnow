@@ -141,7 +141,6 @@ public class ElectionTests
     }
 
     //test 12
-    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task jcandidateGetsAppendEntryFromHigherTermLeader_RevertsToFollower()
     {   
@@ -181,6 +180,7 @@ public class ElectionTests
         //Term 1
         Node n = new();
         await n.StartElection();
+        await n.LeaderCheck();
         
         //force it to be higher
         n.Term = 2;
@@ -193,8 +193,7 @@ public class ElectionTests
         await n1.StartElection();
 
         //Heartbeat from n at term 2
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(-1,-1));
+        await n1.AppendEntries(new AppendEntriesData(n.Term,n.Id));
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(NodeState.FOLLOWER, n1.State);
@@ -209,12 +208,15 @@ public class ElectionTests
         Node n1 = new(1);
         Node n2 = new(2);
 
-        n2.State = NodeState.CANDIDATE;
-        n.VotedId = 2;
-        //n1 presumed unresponsive
+        n.AddNode(n2);
+        n2.AddNode(n);
 
-        await n2.LeaderCheck();
-        Assert.Equal(NodeState.LEADER, n2.State);
+        await n.BecomeCandidate();
+  
+        //n1 presumed unresponsive - not sure how do this better
+
+        await n.LeaderCheck();
+        Assert.Equal(NodeState.LEADER, n.State);
     }
 
     //test 10
@@ -223,27 +225,25 @@ public class ElectionTests
     {
         //Term 1
         Node n = new();
-        await n.StartElection();
+        n.Term = 1;
 
         Node n1 = new(1);
-        n.nodes.Add(n1);
-        n1.nodes.Add(n);
+        n1.Term = 2;
 
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(-1, -1));
-
-        //Term 2
-        await n1.StartElection();
-
-        //restarts or comes online late - defaults 0 term
+        //restarts or comes online late 
         Node n2 = new(2);
-        n.nodes.Add(n2);
-        n1.nodes.Add(n2);
-        n2.nodes = [n, n1];
+        n.AddNode(n2);
+        n1.AddNode(n2);
+        n2.AddNode(n);
+        n2.AddNode(n1);
 
+        //term 3
+        await n1.StartElection();
+        //term 2
         await n.StartElection();
 
-        Assert.Equal(0, n2.VotedId);
+        Assert.Equal(n1.Id, n2.VotedId);
+        Assert.Equal(n1.Term, n2.Term);
     }
 
     //test 5
@@ -262,27 +262,18 @@ public class ElectionTests
     }
 
     //test 14
+    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task oVotingForTheSameTermShouldReturnFalse()
     {
-        Node n = new();
-        Node n1 = new(1);
-        Node n2 = new(2);
+        Node n = new(1);
+        var n1 = Substitute.For<INode>();
+        n1.Term = 1;
 
-        n1.nodes = [n, n2];
-        n2.nodes = [n, n1];
-        n.nodes = [n1, n2];
+        n.AddNode(n1);
 
-        await n.StartElection();
-
-        Assert.Equal(n.Id, n2.VotedId);
-        Assert.Equal(1, n2.VotedTerm);
-
-        n1.Term = 0;
-        await n1.StartElection();
-
-        Assert.Equal(n.Id, n2.VotedId);
-        Assert.Equal(1, n2.VotedTerm);
+        await n.RequestVote(new VoteResponseData(1,0));
+        await n1.Received().RespondVote(new VoteRequestData(false, n1.Id,1));
     }
 
     //test 15
