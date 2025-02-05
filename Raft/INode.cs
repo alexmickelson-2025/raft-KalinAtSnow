@@ -25,13 +25,12 @@ namespace Raft
         Task AppendEntries(AppendEntriesData data);
         Task AppendEntryResponse(AppendEntriesDTO dto);
         Task BecomeCandidate();
-        Task LeaderCheck(int votes);
         void RefreshTimer();
         void AddNode(INode node);
-        Task<bool> RespondVote(VoteResponseData voteData);
+        Task RespondVote(VoteRequestData voteData);
         Task CommandReceived(ClientCommandData commandData);
         Thread Start();
-        Task RequestVote();
+        Task RequestVote(VoteResponseData voteData);
         Task StartElection();
     }
 }

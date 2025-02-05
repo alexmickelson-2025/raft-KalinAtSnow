@@ -71,14 +71,14 @@ app.MapGet("/nodeData", () =>
   );
 });
  
-app.MapPost("/request/appendEntries", async () => //AppendEntriesData request) =>
+app.MapPost("/request/appendEntries", async (AppendEntriesData request) =>
 {
-        await node.AppendEntries(new AppendEntriesData(node.Term)); // request);
+        await node.AppendEntries(request);
 });
  
-app.MapPost("/request/vote", async ()=> //VoteRequestData request) =>
+app.MapPost("/request/vote", async (VoteResponseData request) =>
 {
-await node.RequestVote();// request);
+await node.RequestVote( request);
 });
  
 app.MapPost("/response/appendEntries", async (AppendEntriesDTO response) =>
@@ -86,7 +86,7 @@ app.MapPost("/response/appendEntries", async (AppendEntriesDTO response) =>
   await node.AppendEntryResponse(response);
 });
  
-app.MapPost("/response/vote", async (VoteResponseData response) =>
+app.MapPost("/response/vote", async (VoteRequestData response) =>
 {
   await node.RespondVote(response);
 });

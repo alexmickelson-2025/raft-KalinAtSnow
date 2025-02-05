@@ -7,7 +7,7 @@ public class ElectionTests
 {
     //test 3
     [Fact]
-    public void givenNodeStarts_shouldBeFollower()
+    public void agivenNodeStarts_shouldBeFollower()
     {
         Node n = new();
         Assert.Equal(NodeState.FOLLOWER, n.State);
@@ -15,16 +15,16 @@ public class ElectionTests
 
     //test 11
     [Fact]
-    public async Task givenNodeTurnsToCandidate_VotesForItself()
+    public async Task bgivenNodeTurnsToCandidate_VotesForItself()
     {
         Node n = new();
         await n.BecomeCandidate();
-        Assert.Equal(0, n.VotedId);
+        Assert.Equal(n.Id, n.VotedId);
     }
 
     //test 8 single
     [Fact]
-    public async Task givenOneNodeElection_TurnLeaderWithOneVote()
+    public async Task cgivenOneNodeElection_TurnLeaderWithOneVote()
     {
         Node n = new();
         await n.StartElection();
@@ -34,28 +34,37 @@ public class ElectionTests
     //test 8 multi
     //TODO update this test to not use node.___ for validation
     [Fact]
-    public async Task givenThreeNodeElection_TurnLeaderWithThreeVotes()
+    public async Task dgivenThreeNodeElection_TurnLeaderWithThreeVotes()
     {
-        Node n = new();
-        var n1 = Substitute.For<INode>();
-        var n2 = Substitute.For<INode>();
+        Node n = new(2);
+        Node n1 = new(1);
+        Node n2 = new(0);
 
-        n.nodes = [n1, n2];
+        n.AddNode(n1);
+        n.AddNode(n2);
+        n1.AddNode(n);
+        n1.AddNode(n2);
+        n2.AddNode(n1);
+        n2.AddNode(n);
 
         await n.StartElection();
 
         Assert.Equal(NodeState.LEADER, n.State);
+        Assert.Equal(n.Id, n1.LeaderId);
+        Assert.Equal(n.Id, n1.VotedId);
     }
 
     //test 19
+    //how do you get this to pass as a substitute?
     [Fact]
-    public async Task turnToLeader_SendHeartbeat()
+    public async Task eturnToLeader_SendHeartbeat()
     {
         Node n = new(0);
         var n1 = Substitute.For<INode>();
         var n2 = Substitute.For<INode>();
 
-        n.nodes = [n1, n2];
+        n.AddNode(n1);
+        n.AddNode(n2);
 
         await n.StartElection();
         Assert.Equal(NodeState.LEADER, n.State);
@@ -66,7 +75,7 @@ public class ElectionTests
 
     //test 2
     [Fact]
-    public async Task givenAppendEntryRecieved_UnderstandTheSenderAsLeaderIfTermIsHigher()
+    public async Task fgivenAppendEntryRecieved_UnderstandTheSenderAsLeaderIfTermIsHigher()
     {
         //node acting as a follower
         Node n = new(1);
@@ -81,7 +90,7 @@ public class ElectionTests
 
     //test 6
     [Fact]
-    public async Task termsIncrementWhenNewCandidacy()
+    public async Task gtermsIncrementWhenNewCandidacy()
     {
         Node n = new();
 
@@ -93,7 +102,7 @@ public class ElectionTests
     }
 
     [Fact]
-    public async Task termValueAreTakenFromLeaderWhenNewNodeComesOnline()
+    public async Task htermValueAreTakenFromLeaderWhenNewNodeComesOnline()
     {
         Node n = new();
         await n.StartElection();
@@ -113,40 +122,25 @@ public class ElectionTests
     //test 12
     //----------------------------------------------------------------------------------------------------------
     [Fact]
-    public async Task candidateStartsElectionWtihHigherTermLeaderPresent_RevertsToFollower()
+    public async Task icandidateStartsElectionWtihHigherTermLeaderPresent_RevertsToFollower()
     {
-        //Term 1
         Node n = new();
-        await n.StartElection();
+        n.Term = 3;
+        n.State = NodeState.LEADER;
 
-        Node n1 = new(1);
-        n.nodes.Add(n1);
-        n1.nodes.Add(n);
+        Node n1 = new(2);
+        
+        n.AddNode(n1);
+        n1.AddNode(n);
 
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(-1,-1));
+        await n1.BecomeCandidate();
 
-        //Term 2
-        await n1.StartElection();
-        Assert.Equal(NodeState.LEADER, n1.State);
-        Assert.Equal(2, n1.Term);
-
-        //restarts or comes online late
-        Node n2 = new(2);
-        n.nodes.Add(n2);
-        n1.nodes.Add(n2);
-        n2.nodes = [n, n1];
-
-        //election gives it Term 1 (less than current) before the heartbeat to bring it to speed occurs - shouldn't go through and reverts
-        await n2.StartElection();
-        Assert.Equal(1, n2.Term);
-        Assert.Equal(NodeState.FOLLOWER, n2.State);
-        Assert.Equal(NodeState.LEADER, n1.State);
+        Assert.Equal(NodeState.FOLLOWER, n1.State);
     }
 
     //test 12
     [Fact]
-    public async Task candidateGetsAppendEntryFromHigherTermLeader_RevertsToFollower()
+    public async Task jcandidateGetsAppendEntryFromHigherTermLeader_RevertsToFollower()
     {
         //Term 1
         Node n = new();
@@ -180,7 +174,7 @@ public class ElectionTests
 
     //test 13
     [Fact]
-    public async Task candidateGetsAppendEntryFromHigherTermLeader_revertsToFollower()
+    public async Task kcandidateGetsAppendEntryFromHigherTermLeader_revertsToFollower()
     {
         //Term 1
         Node n = new();
@@ -207,7 +201,7 @@ public class ElectionTests
 
     //test 9
     [Fact]
-    public async Task unresponsiveNodeDoesNotCancelVoteIfThereIsMajority()
+    public async Task lunresponsiveNodeDoesNotCancelVoteIfThereIsMajority()
     {
         Node n = new();
         Node n1 = new(1);
@@ -217,13 +211,13 @@ public class ElectionTests
         n.VotedId = 2;
         //n1 presumed unresponsive
 
-        await n2.LeaderCheck(1);
+        await n2.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n2.State);
     }
 
     //test 10
     [Fact]
-    public async Task followerHasNotVoted_isBehindATerm_WhenAskedForVote_RespondsToHighestTermCandidate()
+    public async Task mfollowerHasNotVoted_isBehindATerm_WhenAskedForVote_RespondsToHighestTermCandidate()
     {
         //Term 1
         Node n = new();
@@ -252,7 +246,7 @@ public class ElectionTests
 
     //test 5
     [Fact]
-    public void RandomValuesForElectionTimeouts()
+    public void nRandomValuesForElectionTimeouts()
     {
         Node n = new();
 
@@ -267,7 +261,7 @@ public class ElectionTests
 
     //test 14
     [Fact]
-    public async Task VotingForTheSameTermShouldReturnFalse()
+    public async Task oVotingForTheSameTermShouldReturnFalse()
     {
         Node n = new();
         Node n1 = new(1);
@@ -291,7 +285,7 @@ public class ElectionTests
 
     //test 15
     [Fact]
-    public async Task GivenNodeRecievesVotesForFutureElectionAtTimeOfYounger_VotesForTheOldest()
+    public async Task pGivenNodeRecievesVotesForFutureElectionAtTimeOfYounger_VotesForTheOldest()
     {
         Node n = new();
         Node n1 = new(1);
@@ -322,7 +316,7 @@ public class ElectionTests
 
     //test 15 possible edge?
     [Fact]
-    public async Task GivenNodeRecievesVotesForFutureElectionAtTimeOfYounger_VotesForTheOldest_TwoHappenBeforeTheYounger()
+    public async Task qGivenNodeRecievesVotesForFutureElectionAtTimeOfYounger_VotesForTheOldest_TwoHappenBeforeTheYounger()
     {
         Node n = new();
         Node n1 = new(1);
@@ -353,7 +347,7 @@ public class ElectionTests
 
     //test 18
     [Fact]
-    public async Task givenCandidateRecievesAppendEntryFromPreviousTerm_RejectAndContinueWithCandidacy()
+    public async Task rgivenCandidateRecievesAppendEntryFromPreviousTerm_RejectAndContinueWithCandidacy()
     {
         Node n = new();
         await n.StartElection();
@@ -374,7 +368,7 @@ public class ElectionTests
 
     //test 17
     [Fact]
-    public async Task GetAResponseFromAppendEntry()
+    public async Task sGetAResponseFromAppendEntry()
     {
         Node n = new();
         var n1 = Substitute.For<Node>();
@@ -388,7 +382,7 @@ public class ElectionTests
 
     //test 7
     [Fact]
-    public async Task ElectionTimerResetsWhenAppendEntryCalled()
+    public async Task tElectionTimerResetsWhenAppendEntryCalled()
     {
         Node n = new();
         var n1 = Substitute.For<Node>();
@@ -403,7 +397,7 @@ public class ElectionTests
 
     //test 4
     [Fact]
-    public void FollowerDoesNotGetCommunicationFor300ms_StartsElection()
+    public void uFollowerDoesNotGetCommunicationFor300ms_StartsElection()
     {
         Node n = new();
         Thread t = n.Start();
@@ -419,7 +413,7 @@ public class ElectionTests
 
     //test 1
     [Fact]
-    public async Task LeadersSendAppendEntriesEvery10ms()
+    public async Task vLeadersSendAppendEntriesEvery10ms()
     {
         Node n = new();
         await n.StartElection();
@@ -440,7 +434,7 @@ public class ElectionTests
 
     //test 16
     [Fact]
-    public async Task CandidatesStartNewElectionWhenTimerRunsOut()
+    public async Task wCandidatesStartNewElectionWhenTimerRunsOut()
     {
         Node n = new();
         await n.StartElection();

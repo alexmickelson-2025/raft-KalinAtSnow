@@ -27,6 +27,7 @@ public class Node : INode
     //global
     private Random _random = new Random();
     public List<INode> nodes = new List<INode>();
+    public int validVotes = 0;
     public int Id { get; set; }
     public NodeState State { get; set; } = NodeState.FOLLOWER;
     public bool running { get; set; } = true;
@@ -101,13 +102,36 @@ public class Node : INode
         return t;
     }
 
-    public async Task RequestVote()
+    //follower implement
+    public async Task RequestVote(VoteResponseData voteRequestData)
     {
-        await Task.CompletedTask;
+        if (voteRequestData.Term > Term)
+        {
+            VotedId = voteRequestData.LeaderId;
+            LeaderId = voteRequestData.LeaderId;
+            Term = voteRequestData.Term;
+            foreach (INode node in nodes)
+            {
+                if (node.Id == LeaderId)
+                    await node.RespondVote(new VoteRequestData(true, Id, Term));
+            }
+        }
     }
 
-    public async Task LeaderCheck(int votes)
+    public async Task LeaderCheck()
     {
+        var majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
+        if (validVotes >= majority)
+        {
+            State = NodeState.LEADER;
+            foreach (INode n in nodes)
+            {
+                await n.AppendEntries(new AppendEntriesData(Term, Id));
+            }
+        }
+
+
+        /*
         foreach (INode node in nodes)
         {
             if (node.Id == LeaderId && node.Term >= Term)
@@ -117,7 +141,6 @@ public class Node : INode
             }
         }
 
-        var _majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
 
         foreach (INode node in nodes)
         {
@@ -142,43 +165,51 @@ public class Node : INode
                 await node.AppendEntries(new AppendEntriesData(Term, Id));
             }
         }
+        */
         await Task.CompletedTask;
     }
 
     public async Task BecomeCandidate()
     {
+        validVotes = 1;
         State = NodeState.CANDIDATE;
         VotedId = Id;
 
+        foreach (INode node in nodes)
+        {
+            await node.RequestVote(new VoteResponseData(Id, Term));
+        }
+        /*
         Thread.Sleep(networkSendDelay);
         int yea = 1;
         foreach (INode node in nodes)
         {
-            if (await node.RespondVote(new VoteResponseData(Id, Term)))
+            if (await node.RespondVote(new VoteResponseData()))
             {
                 yea++;
             }
         }
 
-        await LeaderCheck(yea);
+        */
+        await LeaderCheck();
+        
+        await Task.CompletedTask;
     }
 
-    public async Task<bool> RespondVote(VoteResponseData voteData)
+    //leader implement
+    public async Task RespondVote(VoteRequestData voteData)
     {
-        Thread.Sleep(networkRespondDelay);
-        if (voteData.term > VotedTerm)
-        {
-            VotedId = voteData.id;
-            VotedTerm = voteData.term;
-            return true;
-        }
-        await Task.CompletedTask;
-        return false;
+        if (voteData.VoteStatus)
+            validVotes++;
+
+        await LeaderCheck();
     }
 
     public async Task StartElection()
     {
         Term++;
+        await BecomeCandidate();
+        /*
         bool ValidForPromotion = true;
         foreach (INode node in nodes)
         {
@@ -187,6 +218,7 @@ public class Node : INode
         }
         if (ValidForPromotion)
             await BecomeCandidate();
+        */
     }
 
 
