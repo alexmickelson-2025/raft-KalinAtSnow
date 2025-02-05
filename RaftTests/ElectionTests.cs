@@ -28,6 +28,7 @@ public class ElectionTests
     {
         Node n = new();
         await n.StartElection();
+        await n.LeaderCheck();
         Assert.Equal(NodeState.LEADER, n.State);
     }
 
@@ -62,9 +63,11 @@ public class ElectionTests
         Node n = new(0);
         var n1 = Substitute.For<INode>();
         var n2 = Substitute.For<INode>();
+        n2.Id = 2;
 
         n.AddNode(n1);
         n.AddNode(n2);
+
 
         await n.StartElection();
         Assert.Equal(NodeState.LEADER, n.State);
@@ -120,7 +123,6 @@ public class ElectionTests
     }
 
     //test 12
-    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task icandidateStartsElectionWtihHigherTermLeaderPresent_RevertsToFollower()
     {
@@ -139,34 +141,34 @@ public class ElectionTests
     }
 
     //test 12
+    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task jcandidateGetsAppendEntryFromHigherTermLeader_RevertsToFollower()
-    {
-        //Term 1
+    {   
+        //Term 1 - n leader
         Node n = new();
         await n.StartElection();
 
         Node n1 = new(1);
-        n.nodes.Add(n1);
-        n1.nodes.Add(n);
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(-1,-1));
+        n.AddNode(n1);
+        n1.AddNode(n);
+        await n1.AppendEntries(new AppendEntriesData(n.Term,n.Id));
 
-        //Term 2
+        //Term 2 - n1 leader
         await n1.StartElection();
         Assert.Equal(NodeState.LEADER, n1.State);
         Assert.Equal(2, n1.Term);
 
         //restarts or comes online late
         Node n2 = new(2);
-        n.nodes.Add(n2);
-        n1.nodes.Add(n2);
-        n2.nodes = [n, n1];
+        n.AddNode(n2);
+        n1.AddNode(n2);
+        n2.AddNode(n);
+        n2.AddNode(n1);
 
         //election gives it Term 1 (less than current) heartbeat occurs - shouldn't go through and reverts with current term (2)
         await n2.StartElection();
-        //TODO: update this
-        await n1.AppendEntries(new AppendEntriesData(-1,-1));
+        await n2.AppendEntries(new AppendEntriesData(n1.Term,n1.Id));
         Assert.Equal(2, n2.Term);
         Assert.Equal(NodeState.FOLLOWER, n2.State);
         Assert.Equal(NodeState.LEADER, n1.State);

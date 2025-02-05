@@ -116,6 +116,11 @@ public class Node : INode
                     await node.RespondVote(new VoteRequestData(true, Id, Term));
             }
         }
+        foreach (INode node in nodes)
+        {
+            if (node.Id == voteRequestData.LeaderId)
+                await node.RespondVote(new VoteRequestData(false, Id, Term));
+        }
     }
 
     public async Task LeaderCheck()
@@ -191,14 +196,18 @@ public class Node : INode
         }
 
         */
-        await LeaderCheck();
-        
-        await Task.CompletedTask;
+        //await LeaderCheck();
     }
 
     //leader implement
     public async Task RespondVote(VoteRequestData voteData)
     {
+        if (voteData.Term > Term)
+        {
+            State = NodeState.FOLLOWER;
+            return;
+        }
+
         if (voteData.VoteStatus)
             validVotes++;
 
