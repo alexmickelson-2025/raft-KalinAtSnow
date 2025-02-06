@@ -10,6 +10,12 @@ using System.Threading.Tasks;
 namespace RaftTests;
 public class PausingTests
 {
+    /*
+     1. when node is a leader with an election loop, then they get paused, other nodes do not get heartbeast for 400 ms
+2. when node is a leader with an election loop, then they get paused, other nodes do not get heartbeast for 400 ms, then they get un-paused and heartbeats resume
+3. When a follower gets paused, it does not time out to become a candidate
+4. When a follower gets unpaused, it will eventually become a candidate.
+    */
     [Fact]
     public async Task WhenLeaderInElection_GetsPaused_OtherNodesDoNotGetHeartbeat()
     {

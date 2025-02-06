@@ -39,10 +39,12 @@ var serviceName = "Node" + nodeId;
 
 var app = builder.Build();
 
-INode[] otherNodes = (INode[])otherNodesRaw
-  .Split(";")
-  .Select(s => new HttpRpcOtherNode(int.Parse(s.Split(",")[0]), s.Split(",")[1]))
-  .ToArray();
+//INode[] otherNodes = (INode[])otherNodesRaw
+//  .Split(";")
+//  .Select(s => new HttpRpcOtherNode(int.Parse(s.Split(",")[0]), s.Split(",")[1]))
+//  .ToArray();
+
+INode[] otherNodes = [];
  
  
 var node = new Node(otherNodes)
@@ -66,8 +68,7 @@ app.MapGet("/nodeData", () =>
     CurrentTermLeader: node.LeaderId,
     CommittedEntryIndex: node.CommittedIndex,
     Log: node.Log,
-    State: node.State,
-    NodeIntervalScalar: node.NodeIntervalScalar
+    State: node.State
   );
 });
  

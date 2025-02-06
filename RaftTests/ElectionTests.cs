@@ -37,18 +37,19 @@ public class ElectionTests
     [Fact]
     public async Task dgivenThreeNodeElection_TurnLeaderWithThreeVotes()
     {
-        Node n = new(2);
-        Node n1 = new(1);
-        Node n2 = new(0);
+        Node n = new(0);
+        var n1 = Substitute.For<INode>();
+        var n2 = Substitute.For<INode>();
+        n2.Id = 2;
+        n1.Id = 1;
 
         n.AddNode(n1);
         n.AddNode(n2);
-        n1.AddNode(n);
-        n1.AddNode(n2);
-        n2.AddNode(n1);
-        n2.AddNode(n);
 
         await n.StartElection();
+
+        await n.RespondVote(new VoteRequestData(true, 1, 1));
+        await n.RespondVote(new VoteRequestData(true, 2, 1));
 
         Assert.Equal(NodeState.LEADER, n.State);
         Assert.Equal(n.Id, n1.LeaderId);
@@ -64,12 +65,17 @@ public class ElectionTests
         var n1 = Substitute.For<INode>();
         var n2 = Substitute.For<INode>();
         n2.Id = 2;
+        n1.Id = 1;
 
         n.AddNode(n1);
         n.AddNode(n2);
 
-
         await n.StartElection();
+
+        await n.RespondVote(new VoteRequestData(true, 1, 1));
+        await n.RespondVote(new VoteRequestData(true, 2, 1));
+
+
         Assert.Equal(NodeState.LEADER, n.State);
 
         await n1.Received().AppendEntries(Arg.Any<AppendEntriesData>());
@@ -262,7 +268,6 @@ public class ElectionTests
     }
 
     //test 14
-    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task oVotingForTheSameTermShouldReturnFalse()
     {
@@ -277,6 +282,7 @@ public class ElectionTests
     }
 
     //test 15
+    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task pGivenNodeRecievesVotesForFutureElectionAtTimeOfYounger_VotesForTheOldest()
     {

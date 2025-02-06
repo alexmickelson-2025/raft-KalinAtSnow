@@ -27,11 +27,11 @@ public class HttpRpcOtherNode// : INode
         }
     }
 
-    public async Task RequestVote()//VoteRequestData request)
+    public async Task RequestVote(VoteRequestData request)
     {
         try
         {
-            //await client.PostAsJsonAsync(Url + "/request/vote");//, request);
+            await client.PostAsJsonAsync(Url + "/request/vote", request);
             Console.WriteLine($"vote request Sent from {_id}");
 
         }

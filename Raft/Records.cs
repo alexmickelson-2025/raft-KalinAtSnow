@@ -16,6 +16,5 @@ public record NodeData(
     int CurrentTermLeader,
     int CommittedEntryIndex,
     List<LogEntries> Log,
-    NodeState State,
-    double NodeIntervalScalar
+    NodeState State
 );
