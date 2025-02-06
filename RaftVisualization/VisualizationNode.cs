@@ -66,22 +66,17 @@ public class VisualizationNode : INode
         ((INode)innerNode).Commit();
     }
 
-    public Task LeaderCheck(int votes)
-    {
-        return ((INode)innerNode).LeaderCheck(votes);
-    }
-
     public void RefreshTimer()
     {
         ((INode)innerNode).RefreshTimer();
     }
 
-    public Task RequestVote()
+    public Task RequestVote(VoteResponseData voteData)
     {
-        return ((INode)innerNode).RequestVote();
+        return ((INode)innerNode).RequestVote(voteData);
     }
 
-    public Task<bool> RespondVote(VoteResponseData voteData)
+    public Task RespondVote(VoteRequestData voteData)
     {
         return ((INode)innerNode).RespondVote(voteData);
     }
