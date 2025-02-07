@@ -14,90 +14,70 @@ public class VisualizationNode : INode
 
     public int _id => innerNode.Id;
 
-    public int? LeaderId => ((INode)innerNode).LeaderId;
+    public int? LeaderId => (innerNode).LeaderId;
 
-    public NodeState State { get => ((INode)innerNode).State; set => ((INode)innerNode).State = value; }
-    public int VotedId { get => ((INode)innerNode).VotedId; set => ((INode)innerNode).VotedId = value; }
-    public int VotedTerm { get => ((INode)innerNode).VotedTerm; set => ((INode)innerNode).VotedTerm = value; }
-    public int Term { get => ((INode)innerNode).Term; set => ((INode)innerNode).Term = value; }
-    public int ElectionTimeout { get => ((INode)innerNode).ElectionTimeout; set => ((INode)innerNode).ElectionTimeout = value; }
-    public bool running { get => ((INode)innerNode).running; set => ((INode)innerNode).running = value; }
-    public int electionMultiplier { get => ((INode)innerNode).electionMultiplier; set => ((INode)innerNode).electionMultiplier = value; }
-    public int networkRespondDelay { get => ((INode)innerNode).networkRespondDelay; set => ((INode)innerNode).networkRespondDelay = value; }
-    public int networkSendDelay { get => ((INode)innerNode).networkSendDelay; set => ((INode)innerNode).networkSendDelay = value; }
-    public int nextValue { get => ((INode)innerNode).nextValue; set => ((INode)innerNode).nextValue = value; }
-    public int CommittedIndex { get => ((INode)innerNode).CommittedIndex; set => ((INode)innerNode).CommittedIndex = value; }
-    public Dictionary<int, int> StateMachine { get => ((INode)innerNode).StateMachine; set => ((INode)innerNode).StateMachine = value; }
-    public List<LogEntries> Log { get => ((INode)innerNode).Log; set => ((INode)innerNode).Log = value; }
-    public double NodeIntervalScalar { get => ((INode)innerNode).NodeIntervalScalar; set => ((INode)innerNode).NodeIntervalScalar = value; }
+    public NodeState State { get => (innerNode).State; set => (innerNode).State = value; }
+    public int VotedId { get => (innerNode).VotedId; set => (innerNode).VotedId = value; }
+    public int VotedTerm { get => (innerNode).VotedTerm; set => (innerNode).VotedTerm = value; }
+    public int Term { get => (innerNode).Term; set => (innerNode).Term = value; }
+    public int ElectionTimeout { get => (innerNode).ElectionTimeout; set => (innerNode).ElectionTimeout = value; }
+    public bool running { get => (innerNode).running; set => (innerNode).running = value; }
+    public int electionMultiplier { get => (innerNode).electionMultiplier; set => (innerNode).electionMultiplier = value; }
+    public int networkRespondDelay { get => (innerNode).networkRespondDelay; set => (innerNode).networkRespondDelay = value; }
+    public int networkSendDelay { get => (innerNode).networkSendDelay; set => (innerNode).networkSendDelay = value; }
+    public int nextValue { get => (innerNode).nextValue; set => (innerNode).nextValue = value; }
+    public int CommittedIndex { get => (innerNode).CommittedIndex; set => (  innerNode).CommittedIndex = value; }
+    public Dictionary<int, int> StateMachine { get => (innerNode).StateMachine; set => ( innerNode).StateMachine = value; }
+    public List<LogEntries> Log { get => (  innerNode).Log; set => (innerNode).Log = value; }
+    public double NodeIntervalScalar { get => (innerNode).NodeIntervalScalar; set => (innerNode).NodeIntervalScalar = value; }
+    int Id { get => (innerNode).Id; set => (innerNode).Id = value; }
+    int INode.Id { get => ((INode)innerNode).Id; set => ((INode)innerNode).Id = value; }
+    Dictionary<int, int> NextIndexes { get => (innerNode).NextIndexes; set => (innerNode).NextIndexes = value; }
 
     int INode.LeaderId => ((INode)innerNode).LeaderId;
 
-    int INode.Id { get => ((INode)innerNode).Id; set => ((INode)innerNode).Id = value; }
-    Dictionary<int, int> INode.NextIndexes { get => ((INode)innerNode).NextIndexes; set => ((INode)innerNode).NextIndexes = value; }
-
     public void AddNode(INode node)
     {
-        ((INode)innerNode).AddNode(node);
+        (innerNode).AddNode(node);
     }
 
     public Task AppendEntries(AppendEntriesData data)
     {
-        return ((INode)innerNode).AppendEntries(data);
+        return (innerNode).AppendEntries(data);
     }
 
     public Task AppendEntryResponse(AppendEntriesDTO dto)
     {
-        return ((INode)innerNode).AppendEntryResponse(dto);
-    }
-
-    public void BecomeCandidate()
-    {
-        ((INode)innerNode).BecomeCandidate();
+        return (innerNode).AppendEntryResponse(dto);
     }
 
     public Task CommandReceived(ClientCommandData commandData)
     {
-        return ((INode)innerNode).CommandReceived(commandData);
+        return (innerNode).CommandReceived(commandData);
     }
 
     public void Commit()
     {
-        ((INode)innerNode).Commit();
+        (innerNode).Commit();
     }
 
     public void RefreshTimer()
     {
-        ((INode)innerNode).RefreshTimer();
+        (   innerNode).RefreshTimer();
     }
 
     public Task RequestVote(VoteResponseData voteData)
     {
-        return ((INode)innerNode).RequestVote(voteData);
+        return (innerNode).RequestVote(voteData);
     }
 
     public Task RespondVote(VoteRequestData voteData)
     {
-        return ((INode)innerNode).RespondVote(voteData);
+        return (innerNode).RespondVote(voteData);
     }
 
     public Thread Start()
     {
-        return ((INode)innerNode).Start();
-    }
-
-    public void StartElection()
-    {
-        ((INode)innerNode).StartElection();
-    }
-
-    Task INode.BecomeCandidate()
-    {
-        return ((INode)innerNode).BecomeCandidate();
-    }
-
-    Task INode.StartElection()
-    {
-        return ((INode)innerNode).StartElection();
+        return (innerNode).Start();
     }
 }

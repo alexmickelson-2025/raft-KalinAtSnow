@@ -91,7 +91,14 @@ public class Node : INode
                 {
                     foreach (INode node in nodes)
                     {
-                        await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                        if (Log.Count > 1)
+                        {
+                            await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, Log[nextValue - 1]));
+                        }
+                        else
+                        {
+                            await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                        }
                     }
                 }
 
@@ -133,7 +140,14 @@ public class Node : INode
             LeaderId = Id;
             foreach (INode n in nodes)
             {
-                await n.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                if (Log.Count > 1)
+                {
+                    await n.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, Log[nextValue - 1]));
+                }
+                else
+                {
+                    await n.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                }
             }
         }
     }
@@ -174,12 +188,24 @@ public class Node : INode
 
     // implemented as a follower - leader send this to a follower
     public async Task AppendEntries(AppendEntriesData appendEntriesData)
-    { 
-        LeaderId = appendEntriesData.LeaderId;
-        nextValue = appendEntriesData.nextValue+1;
-        Term = appendEntriesData.Term;
+    {
+        if (appendEntriesData.log.key != -1 && appendEntriesData.log.value != -1)
+        {
+            LeaderId = appendEntriesData.LeaderId;
+            nextValue = appendEntriesData.nextValue + 1;
+            Term = appendEntriesData.Term;
+            CommittedIndex = appendEntriesData.CommittedIndex;
+            StateMachine[appendEntriesData.log.key] = appendEntriesData.log.value;
+        }
         RefreshTimer();
-        await Task.CompletedTask;
+
+        foreach (INode n in nodes)
+        {
+            if (n.Id == LeaderId)
+            {
+                await n.AppendEntryResponse(new AppendEntriesDTO(true, nextValue, Id));
+            }
+        }
     }
 
     public void Commit()
@@ -206,6 +232,21 @@ public class Node : INode
     public async Task AppendEntryResponse(AppendEntriesDTO dto)
     {
         await Task.CompletedTask;
+
+        NextIndexes[dto.id] = dto.index;
+        int readyForCommit = 1;
+        var majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
+        foreach (INode node in nodes)
+        {
+            if (NextIndexes[node.Id] > CommittedIndex)
+            {
+                readyForCommit++;
+            }
+        }
+        if (readyForCommit >= majority)
+        {
+            Commit();
+        }
         /*
         Thread.Sleep(networkRespondDelay);
         RefreshTimer();
@@ -265,7 +306,14 @@ public class Node : INode
             nextValue++;
             foreach (INode node in nodes)
             {
-                await node.AppendEntries(new AppendEntriesData(Term, Id,nextValue, CommittedIndex, new LogEntries(Term, commandData.setKey, commandData.setValue)));
+                if (Log.Count > 1)
+                {
+                    await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, Log[nextValue - 1]));
+                }
+                else
+                {
+                    await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                }
             }
         }
     }

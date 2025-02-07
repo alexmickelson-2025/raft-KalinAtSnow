@@ -281,7 +281,6 @@ public class ElectionTests
     }
 
     //test 15
-    //----------------------------------------------------------------------------------------------------------
     [Fact]
     public async Task pGivenNodeEntersElectionsTwice_ShouldVoteForBoth_EndingWithStatsOfSecond()
     {
@@ -325,7 +324,7 @@ public class ElectionTests
 
         await n1.AppendEntries(new AppendEntriesData(-1, -1, n.nextValue, n.CommittedIndex, new LogEntries(-1, -1, -1)));
 
-        await n1.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
+        await n.Received().AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
     }
 
     //test 7

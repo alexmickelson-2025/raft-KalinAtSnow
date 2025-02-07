@@ -1,5 +1,7 @@
 ﻿@rendermode InteractiveServer
 @page "/"
+@using Raft
+@using raftapi
 
 <PageTitle>Home</PageTitle>
 
@@ -9,9 +11,126 @@ Welcome to your new app.
 
 @foreach (string url in Urls)
 {
-<h1>@Urls</h1>   
+    <h1>@Urls</h1>
 }
 
-@code{
-    string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(','); 
+<button class="btn btn-primary" @onclick="StartSimulation">Start Simulation</button>
+
+<div class="row">
+    <div class="p-3 col-4">
+        <div class="border p-3 rounded-3">
+            <div class="d-flex justify-content-between">
+                <h3>
+                    Node @nodeData[0].Id
+                </h3>
+            </div>
+            <div>
+                @nodeData[0].State
+            </div>
+            <div>
+                Term @nodeData[0].Term
+            </div>
+            <div>
+                Leader is @nodeData[0].CurrentTermLeader
+            </div>
+            <div>
+                <div class="progress">
+                    @* <div class="progress-bar bg-dark-subtle" role="progressbar"
+                         style="width: @(percentageRemaining)%" aria-valuenow="@timeoutRemaining"
+                         aria-valuemin="0" aria-valuemax="@maxIntervalMilliseconds">
+                    </div> *@
+                </div>
+            </div>
+            <div>
+                Commit Index: @nodeData[0].CommittedEntryIndex
+            </div>
+            <div>
+                <label>
+                    key
+                    <input type="number" @bind="sendKey" />
+                </label>
+                <label>
+                    value
+                    <input type="number" @bind="sendValue" />
+                </label>
+                <button @onclick="() => SendCommand(nodeData[0].Id, sendKey, sendValue)"> send </button>
+            </div>
+            <div>
+                State:
+                @* @foreach (var state in nodeData[0].StateMachine)
+                {
+                    <div>
+                        Key: @state.Key, Value: @state.Value
+                    </div>
+                } *@
+            </div>
+            <div>
+                Logs: @foreach (LogEntries log in nodeData[0].Log)
+                {
+                    <div>
+                        command: @log.key @log.value Term: @log.term
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(';');
+    private Timer? timer;
+    bool isRunning;
+    List<HttpRpcOtherNode>? visualizationNodes = [];
+    int electionMultiplier = 1;
+    int networkSendDelay = 0;
+    int networkRespondDelay;
+    int sendKey;
+    int sendValue;
+
+    Dictionary<int, NodeData> nodeData = new();
+
+    public void SendCommand(int nodeId, int key, int value)
+    {
+        foreach (INode node in visualizationNodes)
+        {
+            if (node.Id == nodeId)
+            {
+                node.CommandReceived(new ClientCommandData(key, value));
+            }
+        }
+    }
+
+    public void StartSimulation()
+    {
+        var node1 = new Node(1);
+        var node2 = new Node(2);
+        var node3 = new Node(3);
+
+        var simulation1 = new HttpRpcOtherNode(1, Urls[0]);
+        var simulation2 = new HttpRpcOtherNode(2, Urls[1]);
+        var simulation3 = new HttpRpcOtherNode(3, Urls[2]);
+
+        node1.AddNode(simulation2);
+        node1.AddNode(simulation3);
+        node2.AddNode(simulation1);
+        node2.AddNode(simulation3);
+        node3.AddNode(simulation1);
+        node3.AddNode(simulation2);
+
+        visualizationNodes = [simulation1, simulation2, simulation3];
+
+        node1.Start();
+        node2.Start();
+        node3.Start();
+
+        StateHasChanged();
+        timer = new Timer(async _ =>
+        {
+            foreach (HttpRpcOtherNode nodes in visualizationNodes)
+            {
+                await nodes.GetData();
+            }
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 200);
+    }
 }
