@@ -1,5 +1,7 @@
 ﻿@rendermode InteractiveServer
 @page "/"
+@using Raft
+@using raftapi
 
 <PageTitle>Home</PageTitle>
 
@@ -7,11 +9,209 @@
 
 Welcome to your new app.
 
-@foreach (string url in Urls)
-{
-<h1>@Urls</h1>   
-}
+<div class="row">
+    <div class="p-3 col-4">
+        <div class="border p-3 rounded-3">
+            <div class="d-flex justify-content-between">
+                <h3>
+                    Node @nodeData[0].Id
+                </h3>
+            </div>
+            <div>
+                @nodeData[0].State
+            </div>
+            <div>
+                Term @nodeData[0].Term
+            </div>
+            <div>
+                Leader is @nodeData[0].CurrentTermLeader
+            </div>
+            <div>
+                <div class="progress">
+                    
+                </div>
+            </div>
+            <div>
+                Commit Index: @nodeData[0].CommittedEntryIndex
+            </div>
+            <div>
+                <label>
+                    key
+                    <input type="number" @bind="sendKey" />
+                </label>
+                <label>
+                    value
+                    <input type="number" @bind="sendValue" />
+                </label>
+                <button @onclick="() => SendCommand(nodeData[0].Id, sendKey, sendValue)"> send </button>
+            </div>
+            <div>
+                State:
+                
+            </div>
+            <div>
+                Logs: @foreach (LogEntries log in nodeData[0].Log)
+                {
+                    <div>
+                        command: @log.key @log.value Term: @log.term
+                    </div>
+                }
+            </div>
+        </div>
+    </div><div class="p-3 col-4">
+        <div class="border p-3 rounded-3">
+            <div class="d-flex justify-content-between">
+                <h3>
+                    Node @nodeData[1].Id
+                </h3>
+            </div>
+            <div>
+                @nodeData[1].State
+            </div>
+            <div>
+                Term @nodeData[1].Term
+            </div>
+            <div>
+                Leader is @nodeData[1].CurrentTermLeader
+            </div>
+            <div>
+                <div class="progress">
+                </div>
+            </div>
+            <div>
+                Commit Index: @nodeData[1].CommittedEntryIndex
+            </div>
+            <div>
+                <label>
+                    key
+                    <input type="number" @bind="sendKey" />
+                </label>
+                <label>
+                    value
+                    <input type="number" @bind="sendValue" />
+                </label>
+                <button @onclick="() => SendCommand(nodeData[1].Id, sendKey, sendValue)"> send </button>
+            </div>
+            <div>
+                State:
 
-@code{
-    string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(','); 
+            </div>
+            <div>
+                Logs: @foreach (LogEntries log in nodeData[1].Log)
+                {
+                    <div>
+                        command: @log.key @log.value Term: @log.term
+                    </div>
+                }
+            </div>
+        </div>
+    </div><div class="p-3 col-4">
+        <div class="border p-3 rounded-3">
+            <div class="d-flex justify-content-between">
+                <h3>
+                    Node @nodeData[2].Id
+                </h3>
+            </div>
+            <div>
+                @nodeData[2].State
+            </div>
+            <div>
+                Term @nodeData[2].Term
+            </div>
+            <div>
+                Leader is @nodeData[2].CurrentTermLeader
+            </div>
+            <div>
+                <div class="progress">
+                </div>
+            </div>
+            <div>
+                Commit Index: @nodeData[2].CommittedEntryIndex
+            </div>
+            <div>
+                <label>
+                    key
+                    <input type="number" @bind="sendKey" />
+                </label>
+                <label>
+                    value
+                    <input type="number" @bind="sendValue" />
+                </label>
+                <button @onclick="() => SendCommand(nodeData[2].Id, sendKey, sendValue)"> send </button>
+            </div>
+            <div>
+                State:
+
+            </div>
+            <div>
+                Logs: @foreach (LogEntries log in nodeData[2].Log)
+                {
+                    <div>
+                        command: @log.key @log.value Term: @log.term
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+ 
+@code {
+    protected override void OnInitialized()
+    {
+        string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(';');
+        nodeData[0] = new NodeData(1, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        nodeData[1] = new NodeData(2, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        nodeData[2] = new NodeData(3, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        StartLoop();
+        HttpClient client = new HttpClient();
+
+        timer = new Timer(async _ =>
+            {
+                for (int i = 0; i < Urls.Length; i++)
+                {
+                    try
+                    {
+                        HttpResponseMessage response = await client.GetAsync(Urls[i] + "/nodeData");
+                        response.EnsureSuccessStatusCode();
+
+                        NodeData content = await response.Content.ReadFromJsonAsync<NodeData>();
+                        nodeData[i] = content;
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        Console.WriteLine($"Request error: {e.Message}");
+                    }
+                }
+                await InvokeAsync(StateHasChanged);
+            }, null, 0, 200);
+    }
+
+    string[] Urls;
+    private Timer? timer;
+    bool isRunning;
+    List<HttpRpcOtherNode>? visualizationNodes = [];
+    int sendKey;
+    int sendValue;
+
+    Dictionary<int, NodeData> nodeData = new();
+
+    public void SendCommand(int nodeId, int key, int value)
+    {
+        foreach (INode node in visualizationNodes)
+        {
+            if (node.Id == nodeId)
+            {
+                node.CommandReceived(new ClientCommandData(key, value));
+            }
+        }
+    }
+
+
+
+    public void StartLoop()
+    {
+
+        
+    }
+    
 }

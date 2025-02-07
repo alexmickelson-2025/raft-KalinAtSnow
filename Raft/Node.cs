@@ -91,7 +91,14 @@ public class Node : INode
                 {
                     foreach (INode node in nodes)
                     {
-                        await node.AppendEntries(new AppendEntriesData(Term, Id));
+                        if (Log.Count > 1)
+                        {
+                            await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, Log[nextValue - 1]));
+                        }
+                        else
+                        {
+                            await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                        }
                     }
                 }
 
@@ -130,49 +137,19 @@ public class Node : INode
         if (validVotes >= majority)
         {
             State = NodeState.LEADER;
+            LeaderId = Id;
             foreach (INode n in nodes)
             {
-                await n.AppendEntries(new AppendEntriesData(Term, Id));
+                if (Log.Count > 1)
+                {
+                    await n.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, Log[nextValue - 1]));
+                }
+                else
+                {
+                    await n.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                }
             }
         }
-
-
-        /*
-        foreach (INode node in nodes)
-        {
-            if (node.Id == LeaderId && node.Term >= Term)
-            {
-                State = NodeState.FOLLOWER;
-                return;
-            }
-        }
-
-
-        foreach (INode node in nodes)
-        {
-            if (node.VotedTerm >= Term)
-            {
-                continue;
-            }
-
-            if (node.VotedId == Id)
-            {
-                votes++;
-            }
-        }
-
-        if (votes >= _majority)
-        {
-            State = NodeState.LEADER;
-            LeaderId = Id;
-
-            foreach (INode node in nodes)
-            {
-                await node.AppendEntries(new AppendEntriesData(Term, Id));
-            }
-        }
-        */
-        await Task.CompletedTask;
     }
 
     public async Task BecomeCandidate()
@@ -185,19 +162,6 @@ public class Node : INode
         {
             await node.RequestVote(new VoteResponseData(Id, Term));
         }
-        /*
-        Thread.Sleep(networkSendDelay);
-        int yea = 1;
-        foreach (INode node in nodes)
-        {
-            if (await node.RespondVote(new VoteResponseData()))
-            {
-                yea++;
-            }
-        }
-
-        */
-        //await LeaderCheck();
     }
 
     //leader implement
@@ -219,48 +183,29 @@ public class Node : INode
     {
         Term++;
         await BecomeCandidate();
-        /*
-        bool ValidForPromotion = true;
-        foreach (INode node in nodes)
-        {
-            if (node.Term > Term)
-                ValidForPromotion = false;
-        }
-        if (ValidForPromotion)
-            await BecomeCandidate();
-        */
     }
 
 
     // implemented as a follower - leader send this to a follower
     public async Task AppendEntries(AppendEntriesData appendEntriesData)
-    { 
-        LeaderId = appendEntriesData.LeaderId;
-        Term = appendEntriesData.Term;
-        await Task.CompletedTask;
-        /*
-        Thread.Sleep(networkSendDelay);
-        var _majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
-        int success = 1;
-        foreach (INode node in nodes)
+    {
+        if (appendEntriesData.log.key != -1 && appendEntriesData.log.value != -1)
         {
-            await node.AppendEntryResponse(new AppendEntriesDTO(_id, Term, CommittedIndex, nextValue - 1, new LogEntries(-1, -1, -1)));
+            LeaderId = appendEntriesData.LeaderId;
+            nextValue = appendEntriesData.nextValue + 1;
+            Term = appendEntriesData.Term;
+            CommittedIndex = appendEntriesData.CommittedIndex;
+            StateMachine[appendEntriesData.log.key] = appendEntriesData.log.value;
+        }
+        RefreshTimer();
 
-            if (appendEntriesData.isValid == true)
-            {
-                success++;
-            }
-            else
-            {
-                NextIndexes[node._id]--;
-                node.nextValue--;
-            }
-        }
-        if (success >= _majority)
+        foreach (INode n in nodes)
         {
-            Commit();
+            if (n.Id == LeaderId)
+            {
+                await n.AppendEntryResponse(new AppendEntriesDTO(true, nextValue, Id));
+            }
         }
-        */
     }
 
     public void Commit()
@@ -287,6 +232,21 @@ public class Node : INode
     public async Task AppendEntryResponse(AppendEntriesDTO dto)
     {
         await Task.CompletedTask;
+
+        NextIndexes[dto.id] = dto.index;
+        int readyForCommit = 1;
+        var majority = Math.Ceiling(((double)nodes.Count + 1) / 2);
+        foreach (INode node in nodes)
+        {
+            if (NextIndexes[node.Id] > CommittedIndex)
+            {
+                readyForCommit++;
+            }
+        }
+        if (readyForCommit >= majority)
+        {
+            Commit();
+        }
         /*
         Thread.Sleep(networkRespondDelay);
         RefreshTimer();
@@ -344,8 +304,18 @@ public class Node : INode
         {
             Log.Add(new LogEntries(Term, commandData.setKey, commandData.setValue));
             nextValue++;
+            foreach (INode node in nodes)
+            {
+                if (Log.Count > 1)
+                {
+                    await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, Log[nextValue - 1]));
+                }
+                else
+                {
+                    await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                }
+            }
         }
-        await Task.CompletedTask;
     }
 }
 
