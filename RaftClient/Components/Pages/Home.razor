@@ -9,13 +9,6 @@
 
 Welcome to your new app.
 
-@foreach (string url in Urls)
-{
-    <h1>@Urls</h1>
-}
-
-<button class="btn btn-primary" @onclick="StartSimulation">Start Simulation</button>
-
 <div class="row">
     <div class="p-3 col-4">
         <div class="border p-3 rounded-3">
@@ -35,10 +28,7 @@ Welcome to your new app.
             </div>
             <div>
                 <div class="progress">
-                    @* <div class="progress-bar bg-dark-subtle" role="progressbar"
-                         style="width: @(percentageRemaining)%" aria-valuenow="@timeoutRemaining"
-                         aria-valuemin="0" aria-valuemax="@maxIntervalMilliseconds">
-                    </div> *@
+                    
                 </div>
             </div>
             <div>
@@ -57,12 +47,7 @@ Welcome to your new app.
             </div>
             <div>
                 State:
-                @* @foreach (var state in nodeData[0].StateMachine)
-                {
-                    <div>
-                        Key: @state.Key, Value: @state.Value
-                    </div>
-                } *@
+                
             </div>
             <div>
                 Logs: @foreach (LogEntries log in nodeData[0].Log)
@@ -73,17 +58,138 @@ Welcome to your new app.
                 }
             </div>
         </div>
+    </div><div class="p-3 col-4">
+        <div class="border p-3 rounded-3">
+            <div class="d-flex justify-content-between">
+                <h3>
+                    Node @nodeData[1].Id
+                </h3>
+            </div>
+            <div>
+                @nodeData[1].State
+            </div>
+            <div>
+                Term @nodeData[1].Term
+            </div>
+            <div>
+                Leader is @nodeData[1].CurrentTermLeader
+            </div>
+            <div>
+                <div class="progress">
+                </div>
+            </div>
+            <div>
+                Commit Index: @nodeData[1].CommittedEntryIndex
+            </div>
+            <div>
+                <label>
+                    key
+                    <input type="number" @bind="sendKey" />
+                </label>
+                <label>
+                    value
+                    <input type="number" @bind="sendValue" />
+                </label>
+                <button @onclick="() => SendCommand(nodeData[1].Id, sendKey, sendValue)"> send </button>
+            </div>
+            <div>
+                State:
+
+            </div>
+            <div>
+                Logs: @foreach (LogEntries log in nodeData[1].Log)
+                {
+                    <div>
+                        command: @log.key @log.value Term: @log.term
+                    </div>
+                }
+            </div>
+        </div>
+    </div><div class="p-3 col-4">
+        <div class="border p-3 rounded-3">
+            <div class="d-flex justify-content-between">
+                <h3>
+                    Node @nodeData[2].Id
+                </h3>
+            </div>
+            <div>
+                @nodeData[2].State
+            </div>
+            <div>
+                Term @nodeData[2].Term
+            </div>
+            <div>
+                Leader is @nodeData[2].CurrentTermLeader
+            </div>
+            <div>
+                <div class="progress">
+                </div>
+            </div>
+            <div>
+                Commit Index: @nodeData[2].CommittedEntryIndex
+            </div>
+            <div>
+                <label>
+                    key
+                    <input type="number" @bind="sendKey" />
+                </label>
+                <label>
+                    value
+                    <input type="number" @bind="sendValue" />
+                </label>
+                <button @onclick="() => SendCommand(nodeData[2].Id, sendKey, sendValue)"> send </button>
+            </div>
+            <div>
+                State:
+
+            </div>
+            <div>
+                Logs: @foreach (LogEntries log in nodeData[2].Log)
+                {
+                    <div>
+                        command: @log.key @log.value Term: @log.term
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>
-
+ 
 @code {
-    string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(';');
+    protected override void OnInitialized()
+    {
+        string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(';');
+        nodeData[0] = new NodeData(1, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        nodeData[1] = new NodeData(2, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        nodeData[2] = new NodeData(3, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        StartLoop();
+        HttpClient client = new HttpClient();
+
+        timer = new Timer(async _ =>
+            {
+                for (int i = 0; i < Urls.Length; i++)
+                {
+                    try
+                    {
+                        HttpResponseMessage response = await client.GetAsync(Urls[i] + "/nodeData");
+                        response.EnsureSuccessStatusCode();
+
+                        NodeData content = await response.Content.ReadFromJsonAsync<NodeData>();
+                        nodeData[i] = content;
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        Console.WriteLine($"Request error: {e.Message}");
+                    }
+                }
+                await InvokeAsync(StateHasChanged);
+            }, null, 0, 200);
+    }
+
+    string[] Urls;
     private Timer? timer;
     bool isRunning;
     List<HttpRpcOtherNode>? visualizationNodes = [];
-    int electionMultiplier = 1;
-    int networkSendDelay = 0;
-    int networkRespondDelay;
     int sendKey;
     int sendValue;
 
@@ -100,37 +206,12 @@ Welcome to your new app.
         }
     }
 
-    public void StartSimulation()
+
+
+    public void StartLoop()
     {
-        var node1 = new Node(1);
-        var node2 = new Node(2);
-        var node3 = new Node(3);
 
-        var simulation1 = new HttpRpcOtherNode(1, Urls[0]);
-        var simulation2 = new HttpRpcOtherNode(2, Urls[1]);
-        var simulation3 = new HttpRpcOtherNode(3, Urls[2]);
-
-        node1.AddNode(simulation2);
-        node1.AddNode(simulation3);
-        node2.AddNode(simulation1);
-        node2.AddNode(simulation3);
-        node3.AddNode(simulation1);
-        node3.AddNode(simulation2);
-
-        visualizationNodes = [simulation1, simulation2, simulation3];
-
-        node1.Start();
-        node2.Start();
-        node3.Start();
-
-        StateHasChanged();
-        timer = new Timer(async _ =>
-        {
-            foreach (HttpRpcOtherNode nodes in visualizationNodes)
-            {
-                await nodes.GetData();
-            }
-            await InvokeAsync(StateHasChanged);
-        }, null, 0, 200);
+        
     }
+    
 }

@@ -39,13 +39,10 @@ var serviceName = "Node" + nodeId;
 
 var app = builder.Build();
 
-//INode[] otherNodes = (INode[])otherNodesRaw
-//  .Split(";")
-//  .Select(s => new HttpRpcOtherNode(int.Parse(s.Split(",")[0]), s.Split(",")[1]))
-//  .ToArray();
-
-INode[] otherNodes = [];
- 
+INode[] otherNodes = (INode[])otherNodesRaw
+  .Split(";")
+  .Select(s => new HttpRpcOtherNode(int.Parse(s.Split(",")[0]), s.Split(",")[1]))
+  .ToArray();
  
 var node = new Node(otherNodes)
 {
