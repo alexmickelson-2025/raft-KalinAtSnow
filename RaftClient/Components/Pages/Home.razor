@@ -158,12 +158,11 @@ Welcome to your new app.
 @code {
     protected override void OnInitialized()
     {
-        string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(';');
+        Urls = Environment.GetEnvironmentVariable("NODE_URLS")!.Split(';');
         nodeData[0] = new NodeData(1, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
         nodeData[1] = new NodeData(2, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
         nodeData[2] = new NodeData(3, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
-        StartLoop();
-        HttpClient client = new HttpClient();
+        client = new HttpClient();
 
         timer = new Timer(async _ =>
             {
@@ -174,7 +173,7 @@ Welcome to your new app.
                         HttpResponseMessage response = await client.GetAsync(Urls[i] + "/nodeData");
                         response.EnsureSuccessStatusCode();
 
-                        NodeData content = await response.Content.ReadFromJsonAsync<NodeData>();
+                        NodeData content = await response.Content.ReadFromJsonAsync<NodeData>() ?? new NodeData(i, false, -1, -1, -1, -1, new List<LogEntries>(), NodeState.FOLLOWER);
                         nodeData[i] = content;
                     }
                     catch (HttpRequestException e)
@@ -186,30 +185,17 @@ Welcome to your new app.
             }, null, 0, 200);
     }
 
+    string[] Urls = [];
     private Timer? timer;
     List<HttpRpcOtherNode>? visualizationNodes = [];
     int sendKey;
     int sendValue;
-
+    HttpClient? client;
     Dictionary<int, NodeData> nodeData = new();
 
     public void SendCommand(int nodeId, int key, int value)
     {
-        foreach (INode node in visualizationNodes)
-        {
-            if (node.Id == nodeId)
-            {
-                node.CommandReceived(new ClientCommandData(key, value));
-            }
-        }
-    }
-
-
-
-    public void StartLoop()
-    {
-
-        
-    }
-    
+        if (client is not null)
+            client.PostAsJsonAsync<ClientCommandData>(Urls + "/request/command", new ClientCommandData(key,value));
+    }  
 }
