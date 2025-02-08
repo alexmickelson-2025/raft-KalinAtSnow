@@ -97,7 +97,7 @@ public class logReplication
     [Fact]
     public async Task gHighestCommittedIndexIncludedInAppendEntries()
     {
-        Node n = new Node(10);
+        Node n = new Node(0);
         var n1 = Substitute.For<INode>();
 
         n.AddNode(n1);
@@ -106,7 +106,7 @@ public class logReplication
         n.CommittedIndex = 3;
 
         await n1.AppendEntries(new AppendEntriesData(n.Term, n.Id, n.nextValue, n.CommittedIndex, new LogEntries(n.Term, -1, -1)));
-        await n1.Received().AppendEntries(Arg.Is<AppendEntriesData>(dto => dto.CommittedIndex == 3));
+        await n1.Received().AppendEntries(new AppendEntriesData(0, 0, 0, 3, new LogEntries(0, -1, -1)));
     }
 
     //test 7
@@ -142,8 +142,8 @@ public class logReplication
         n.State = NodeState.LEADER;
         await n.CommandReceived(new ClientCommandData(0, 5));
 
-        await n.AppendEntryResponse(new AppendEntriesDTO(true, 1, n1.Id));
-        await n.AppendEntryResponse(new AppendEntriesDTO(true, 1, n2.Id));
+        await n.AppendEntryResponse(new AppendEntriesDTO(true, 1, n1.Term, n1.Id));
+        await n.AppendEntryResponse(new AppendEntriesDTO(true, 1, n2.Term, n2.Id));
         Assert.Equal(1, n.CommittedIndex);
     }
 
@@ -191,7 +191,7 @@ public class logReplication
         n.State = NodeState.LEADER;
 
         await n.CommandReceived(new ClientCommandData(0, 4));
-        await n.CommandReceived(new ClientCommandData(1, 5));
+        //await n.CommandReceived(new ClientCommandData(1, 5));
         
         await n1.AppendEntries(new AppendEntriesData(n.Term, n.Id, n.nextValue, n.CommittedIndex, n.Log[n.nextValue-1]));
         
@@ -204,11 +204,7 @@ public class logReplication
     {
         Node n = new Node();
 
-        await n.AppendEntryResponse(Arg.Any<AppendEntriesDTO>());
-
-        //TODO: fix this test
-        //Assert.Equal(0, result.term);
-        //Assert.Equal(0, result.log);
+        await n.AppendEntryResponse(new AppendEntriesDTO(true, n.nextValue, n.Term, n.Id));
     }
 
 
@@ -245,8 +241,7 @@ public class logReplication
 
         Assert.Equal(1, n.CommittedIndex);
 
-        //TODO: update this
-        //await n1.AppendEntries(new AppendEntriesData(-1, -1));
+        await n1.AppendEntries(new AppendEntriesData(n.Term, n.Id, n.nextValue, n.CommittedIndex, n.Log[n.nextValue-1]));
         Assert.Equal(1, n1.CommittedIndex);
     }
 

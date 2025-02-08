@@ -191,11 +191,15 @@ public class Node : INode
     {
         if (appendEntriesData.log.key != -1 && appendEntriesData.log.value != -1)
         {
+            Log.Add(appendEntriesData.log);
             LeaderId = appendEntriesData.LeaderId;
             nextValue = appendEntriesData.nextValue + 1;
             Term = appendEntriesData.Term;
-            CommittedIndex = appendEntriesData.CommittedIndex;
-            StateMachine[appendEntriesData.log.key] = appendEntriesData.log.value;
+            if (CommittedIndex < appendEntriesData.CommittedIndex)
+            {
+                CommittedIndex = appendEntriesData.CommittedIndex;
+                StateMachine[appendEntriesData.log.key] = appendEntriesData.log.value;
+            }
         }
         RefreshTimer();
 
@@ -203,7 +207,7 @@ public class Node : INode
         {
             if (n.Id == LeaderId)
             {
-                await n.AppendEntryResponse(new AppendEntriesDTO(true, nextValue, Id));
+                await n.AppendEntryResponse(new AppendEntriesDTO(true, nextValue,Term, Id));
             }
         }
     }
@@ -247,49 +251,6 @@ public class Node : INode
         {
             Commit();
         }
-        /*
-        Thread.Sleep(networkRespondDelay);
-        RefreshTimer();
-        foreach (INode node in nodes)
-        {
-            if (node._id != dto.leaderId)
-                break;
-
-            if (Log is null)
-                Log = new List<LogEntries>();
-
-            if (dto.logValue is null)
-                await node.AppendEntries(new AppendEntriesData(Term, nextValue, false));
-
-
-            if (dto.logValue.term != -1)
-                Log.Add(dto.logValue);
-
-            if (dto.term > Term)
-            {
-                LeaderId = dto.leaderId;
-                Term = dto.term;
-            }
-            else
-            {
-                await node.AppendEntries(new AppendEntriesData(Term, nextValue, false));
-            }
-
-            if (CommittedIndex == 0 && this.CommittedIndex <= CommittedIndex)
-            {
-                await node.AppendEntries(new AppendEntriesData(Term, nextValue, true));
-            }
-
-            if (CommittedIndex > this.CommittedIndex)
-            {
-                this.CommittedIndex = CommittedIndex;
-                StateMachine.Add(CommittedIndex - 1, Log[CommittedIndex - 1].value);
-                await node.AppendEntries(new AppendEntriesData(Term, nextValue, true));
-            }
-
-            await node.AppendEntries(new AppendEntriesData(Term, nextValue, false));
-        }
-        */
     }
 
     public void RefreshTimer()
@@ -312,7 +273,7 @@ public class Node : INode
                 }
                 else
                 {
-                    await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, -1, -1)));
+                    await node.AppendEntries(new AppendEntriesData(Term, Id, nextValue, CommittedIndex, new LogEntries(Term, commandData.setKey, commandData.setValue)));
                 }
             }
         }
