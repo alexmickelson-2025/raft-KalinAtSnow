@@ -44,7 +44,7 @@ services:
   client:
     build:
       context: .
-      dockerfile: dev-slow.Dockerfile
+      dockerfile: dev-slow2.Dockerfile
     ports:
       - 5000:8080
     environment:
