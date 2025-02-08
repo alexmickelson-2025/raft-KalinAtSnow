@@ -91,7 +91,7 @@ public class ElectionTests
 
         Assert.Equal(0, n.LeaderId);
 
-        await n.AppendEntries(new AppendEntriesData(3,2,n.nextValue, n.CommittedIndex, new LogEntries(-1, -1, -1)));
+        await n.AppendEntries(new AppendEntriesData(3,2,n.nextValue, n.CommittedIndex, new LogEntries(3, -1, -1)));
 
         Assert.Equal(2, n.LeaderId);
     }
@@ -123,7 +123,7 @@ public class ElectionTests
         n.nodes.Add(n1);
         n1.nodes.Add(n);
 
-        await n1.AppendEntries(new AppendEntriesData(n.Term,n.Id,n.nextValue, n.CommittedIndex, new LogEntries(-1, -1, -1)));
+        await n1.AppendEntries(new AppendEntriesData(n.Term,n.Id,n.nextValue, n.CommittedIndex, new LogEntries(n.Term, -1, -1)));
         Assert.Equal(1, n1.Term);
     }
 
@@ -362,11 +362,10 @@ public class ElectionTests
     public async Task vLeadersSendAppendEntriesEvery10ms()
     {
         Node n = new();
-        await n.StartElection();
+        n.State = NodeState.LEADER; 
         Thread t = n.Start();
 
         var n1 = Substitute.For<Node>();
-        n1.nodes.Add(n);
         n.nodes.Add(n1);
 
         Thread.Sleep(25);
@@ -374,7 +373,7 @@ public class ElectionTests
         n.running = false;
         t.Join();
 
-        await n1.AppendEntries(new AppendEntriesData(-1, -1, n.nextValue, n.CommittedIndex, new LogEntries(-1, -1, -1)));
+        await n.AppendEntries(new AppendEntriesData(-1, -1, n.nextValue, n.CommittedIndex, new LogEntries(-1, -1, -1)));
         Assert.False(true);
     }
 

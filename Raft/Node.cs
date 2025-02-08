@@ -191,10 +191,13 @@ public class Node : INode
     {
         if (appendEntriesData.log.key != -1 && appendEntriesData.log.value != -1)
         {
-            Log.Add(appendEntriesData.log);
-            LeaderId = appendEntriesData.LeaderId;
-            nextValue = appendEntriesData.nextValue + 1;
             Term = appendEntriesData.Term;
+            LeaderId = appendEntriesData.LeaderId;
+            if (appendEntriesData.nextValue > Log.Count)
+            {
+                Log.Add(appendEntriesData.log);
+                nextValue = appendEntriesData.nextValue;
+            }
             if (CommittedIndex < appendEntriesData.CommittedIndex)
             {
                 CommittedIndex = appendEntriesData.CommittedIndex;
@@ -221,14 +224,7 @@ public class Node : INode
                 return;
             }
             CommittedIndex++;
-            if (StateMachine.ContainsKey(nextValue - 1))
-            {
-                StateMachine[nextValue - 1] = Log[nextValue - 1].value;
-            }
-            else
-            {
-                StateMachine.Add(nextValue - 1, Log[nextValue - 1].value);
-            }
+            StateMachine[Log[nextValue-1].key] = Log[nextValue - 1].value;
         }
     }
 
