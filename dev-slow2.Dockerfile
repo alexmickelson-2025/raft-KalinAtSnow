@@ -9,4 +9,6 @@ WORKDIR /app
  
 COPY . /app
  
+RUN dotnet restore raftapi/raftapi.csproj
+
 CMD dotnet run --project Raftclient

@@ -7,12 +7,6 @@ services:
       - NODE_ID=1
       - OTHER_NODES=2,http://node2:8080;3,http://node3:8080
       - NODE_INTERVAL_SCALAR=50
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 3s
   node2:
     build:
       context: .
@@ -21,12 +15,6 @@ services:
       - NODE_ID=2
       - OTHER_NODES=1,http://node1:8080;3,http://node3:8080
       - NODE_INTERVAL_SCALAR=50
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 3s
   node3:
     build:
       context: .
@@ -35,12 +23,6 @@ services:
       - NODE_ID=3
       - OTHER_NODES=1,http://node1:8080;2,http://node2:8080
       - NODE_INTERVAL_SCALAR=50
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 3s
   client:
     build:
       context: .
