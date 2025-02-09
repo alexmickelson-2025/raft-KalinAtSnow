@@ -10,6 +10,7 @@ public record VoteRequestData(bool VoteStatus, int NodeId, int Term);
 public record ClientCommandData(int setKey, int setValue);
 public record NodeData(
     int Id,
+    Dictionary<int, int> StateMachine,
     bool Status,
     int ElectionTimeout,
     int Term,

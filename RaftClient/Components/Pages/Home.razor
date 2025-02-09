@@ -46,8 +46,12 @@ Welcome to your new app.
                 <button @onclick="() => SendCommand(nodeData[0].Id, sendKey, sendValue)"> send </button>
             </div>
             <div>
-                State:
-                
+                <h1>State:</h1>
+                @foreach(var state in nodeData[0].StateMachine)
+                {
+                    <div> Key: @state.Key Value: @state.Value</div>
+                }
+
             </div>
             <div>
                 Logs: @foreach (LogEntries log in nodeData[0].Log)
@@ -93,7 +97,11 @@ Welcome to your new app.
                 <button @onclick="() => SendCommand(nodeData[1].Id, sendKey, sendValue)"> send </button>
             </div>
             <div>
-                State:
+                <h1>State:</h1>
+                @foreach (var state in nodeData[1].StateMachine)
+                {
+                    <div> Key: @state.Key Value: @state.Value</div>
+                }
 
             </div>
             <div>
@@ -140,7 +148,11 @@ Welcome to your new app.
                 <button @onclick="() => SendCommand(nodeData[2].Id, sendKey, sendValue)"> send </button>
             </div>
             <div>
-                State:
+                <h1>State:</h1>
+                @foreach (var state in nodeData[2].StateMachine)
+                {
+                    <div> Key: @state.Key Value: @state.Value</div>
+                }
 
             </div>
             <div>
@@ -159,9 +171,9 @@ Welcome to your new app.
     protected override void OnInitialized()
     {
         Urls = Environment.GetEnvironmentVariable("NODE_URLS")!.Split(';');
-        nodeData[0] = new NodeData(1, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
-        nodeData[1] = new NodeData(2, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
-        nodeData[2] = new NodeData(3, false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        nodeData[0] = new NodeData(1, new Dictionary<int, int>(), false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        nodeData[1] = new NodeData(2, new Dictionary<int, int>(), false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
+        nodeData[2] = new NodeData(3, new Dictionary<int, int>(), false, 10, 1, 1, 1, new List<LogEntries>(), NodeState.FOLLOWER);
         client = new HttpClient();
 
         timer = new Timer(async _ =>
@@ -173,7 +185,7 @@ Welcome to your new app.
                         HttpResponseMessage response = await client.GetAsync(Urls[i] + "/nodeData");
                         response.EnsureSuccessStatusCode();
 
-                        NodeData content = await response.Content.ReadFromJsonAsync<NodeData>() ?? new NodeData(i, false, -1, -1, -1, -1, new List<LogEntries>(), NodeState.FOLLOWER);
+                        NodeData content = await response.Content.ReadFromJsonAsync<NodeData>() ?? new NodeData(i, new Dictionary<int, int>(), false, -1, -1, -1, -1, new List<LogEntries>(), NodeState.FOLLOWER);
                         nodeData[i] = content;
                     }
                     catch (HttpRequestException e)

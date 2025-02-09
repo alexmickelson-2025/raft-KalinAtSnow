@@ -59,6 +59,7 @@ app.MapGet("/nodeData", () =>
 {
   return new NodeData(
     Id: node.Id,
+    StateMachine: node.StateMachine,
     Status: node.running,
     ElectionTimeout: node.ElectionTimeout,
     Term: node.Term,
