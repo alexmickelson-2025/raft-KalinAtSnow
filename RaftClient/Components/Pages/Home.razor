@@ -196,6 +196,6 @@ Welcome to your new app.
     public void SendCommand(int nodeId, int key, int value)
     {
         if (client is not null)
-            client.PostAsJsonAsync<ClientCommandData>(Urls[nodeId] + "/request/command", new ClientCommandData(key,value));
+            client.PostAsJsonAsync<ClientCommandData>(Urls[nodeId -1] + "/request/command", new ClientCommandData(key,value));
     }  
 }
