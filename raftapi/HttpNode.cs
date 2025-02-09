@@ -95,7 +95,14 @@ public class HttpRpcOtherNode : INode
 
     public async Task CommandReceived(ClientCommandData data)
     {
-        Console.WriteLine($"Command Sent to {Id}");
-        await client.PostAsJsonAsync(Url + "/request/command", data);
+        try
+        {
+            Console.WriteLine($"Command Sent to {Id}");
+            await client.PostAsJsonAsync(Url + "/request/command", data);
+        }
+        catch (HttpRequestException)
+        {
+            Console.WriteLine($" node {Url} is donw");
+        }
     }
 }
