@@ -54,7 +54,9 @@ Welcome to your new app.
 
             </div>
             <div>
-                Logs: @foreach (LogEntries log in nodeData[0].Log)
+                <h1>
+                    Logs:
+                </h1> @foreach (LogEntries log in nodeData[0].Log)
                 {
                     <div>
                         command: @log.key @log.value Term: @log.term
